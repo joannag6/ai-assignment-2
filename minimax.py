@@ -29,16 +29,39 @@ class Player:
         # return ((oldx, oldy), (newx, newy)) for moving piece
         return nextMove # if passing turn
 
+    def updatePlacement(self, place):
+        if self.state.isWhiteTurn:
+            self.state.whitePieces.add(place)
+        else:
+            self.state.blackPieces.add(place)
+
+    def updateMovement(self, move):
+        if self.state.isWhiteTurn:
+            self.state.whitePieces.remove(move[0])
+            self.state.whitePieces.add(move[1])
+        else:
+            self.state.blackPieces.remove(move[0])
+            self.state.blackPieces.add(move[1])
+
     def update(self, action):
         """Update internal game state according to opponent's action"""
         self.turns += 1
 
         # check if turns is odd (black's turn)
+        if self.turns % 2 == 0:
+            self.state.isWhiteTurn = True
+        else:
+            self.state.isWhiteTurn = False
 
         if turns <= STARTING_PIECES * 2:
             # update placement
+            updatePlacement(action)
         else:
             # update movement
+            updateMovement(action)
+
+        removeEatenPieces(self.state, not self.state.isWhiteTurn)
+        removeEatenPieces(self.state, self.state.isWhiteTurn)
 
 
 class GameState:

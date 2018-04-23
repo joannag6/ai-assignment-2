@@ -16,9 +16,9 @@ class Player:
         """turns: int, total turns"""
         # check if turns is odd (black's turn)
         # check if turns > STARTING_PIECES * 2, (placing or moving stage)
-        nextMove = None
+        nextMove = None # if passing turn
 
-        if turns <= STARTING_PIECES * 2:
+        if (self.turns + 1) <= STARTING_PIECES * 2:
             nextMove = minimaxPlacement(self.state)
         else:
             nextMove = minimaxMovement(self.movementService)
@@ -27,7 +27,7 @@ class Player:
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
-        return nextMove # if passing turn
+        return nextMove
 
     def updatePlacement(self, place):
         if self.state.isWhiteTurn:
@@ -101,6 +101,7 @@ def getMoves(movementService):
         for piece in movementService.state.blackPieces:
             moveList += movementService.calcMovesForCoord(piece)
     return moveList # list of possible moves for that player
+
 
 def getPlaces(state):
     placeList = []

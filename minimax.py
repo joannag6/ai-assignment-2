@@ -2,6 +2,9 @@ from moves import *
 
 INITIAL_BOARD_SIZE = 8
 STARTING_PIECES = 12
+LOOKAHEAD = 3
+MOVEMENT_ONE = 128 + STARTING_PIECES * 2
+MOVEMENT_TWO = 64 + MOVEMENT_ONE + STARTING_PIECES * 2
 
 
 class Player:
@@ -12,6 +15,9 @@ class Player:
         self.movementService = Movement(self.state)
         self.turns = 0
 
+    def shrink(self): #TODO: handle corners
+        pass
+
     def action(self, turns):
         """turns: int, total turns"""
         # check if turns is odd (black's turn)
@@ -19,9 +25,13 @@ class Player:
         nextMove = None # if passing turn
 
         if (self.turns + 1) <= STARTING_PIECES * 2:
-            nextMove = minimaxPlacement(self.state)
+            nextMove = minimaxPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - (self.turns+1)))
         else:
-            nextMove = minimaxMovement(self.movementService)
+            if (MOVEMENT_ONE - (self.turns+1) <= 0):
+                turnsLeft = MOVEMENT_TWO - (self.turns+1)
+            else:
+                turnsLeft = MOVEMENT_ONE - (self.turns+1)
+            nextMove = minimaxMovement(self.movementService, min(LOOKAHEAD, turnsLeft))
 
         self.update(nextMove)
 
@@ -88,8 +98,13 @@ class GameState:
         self.blackPieces = newBlackPieces
 
     # check if given state is an end state (there is a winner)
+    # The game ends if either player has fewer than 2 pieces remaining. In this
+    # case, the player with 2 or more pieces remaining wins the game. If both
+    # players have fewer than 2 pieces remaining as a result of the same turn
+    # (for example, due to multiple pieces being eliminated during the shrinking
+    # of the board), then the game ends in a tie.
     def isEndState(self):
-        return (not bool(self.whitePieces)) or (not bool(self.blackPieces))
+        return (len(self.whitePieces) < 2) or (len(self.blackPieces) < 2)
 
     def printBoard(self):
         print("Printing board")
@@ -123,7 +138,7 @@ def getPlaces(state):
 
 # dummy utility function for terminal states
 # for now = ownPieces - oppPieces
-def getTerminalStateValue(state):
+def getEvaluationValue(state):
     if state.isWhitePlayer:
         return len(state.whitePieces) - len(state.blackPieces)
     return len(state.blackPieces) - len(state.whitePieces)
@@ -131,7 +146,7 @@ def getTerminalStateValue(state):
 
 # different for placing and moving stage??
 # returns integer value representing utility value
-def getMoveValue(move, ownTurn, movementService):
+def getMoveValue(move, ownTurn, movementService, turnsLeft):
     # just implement for moving stage first
 
     state = movementService.state
@@ -157,29 +172,31 @@ def getMoveValue(move, ownTurn, movementService):
     removeEatenPieces(newState, not newState.isWhiteTurn)
     removeEatenPieces(newState, newState.isWhiteTurn)
 
-    if newState.isEndState():
-        return getTerminalStateValue(newState)
+    if turnsLeft == 0 or newState.isEndState:  #TODO: OR is end state
+        return getEvaluationValue(newState)
+    #if newState.isEndState():
+    #    return getTerminalStateValue(newState)
 
     movementService.updateState(newState)
 
     choices = []
     for move in getMoves(movementService):
-        choices.append((getMoveValue(move, state, not ownTurn, movementService)))
+        choices.append((getMoveValue(move, state, not ownTurn, movementService, turnsLeft-1)))
 
     if ownTurn:
         return max(choices)
     return min(choices)
 
 
-def minimaxMovement(movementService):
+def minimaxMovement(movementService, turnsLeft):
     choices = []
     for move in getMoves(movementService):
-        choices.append((getMoveValue(move, False, movementService), move))
+        choices.append((getMoveValue(move, False, movementService), move, turnsLeft-1))
     return max(choices)[1]
 
 
 # returns integer value representing utility value
-def getPlaceValue(place, ownTurn, state):
+def getPlaceValue(place, ownTurn, state, turnsLeft):
     # just implement for moving stage first
 
     state = movementService.state
@@ -203,22 +220,22 @@ def getPlaceValue(place, ownTurn, state):
     removeEatenPieces(newState, not newState.isWhiteTurn)
     removeEatenPieces(newState, newState.isWhiteTurn)
 
-    if newState.isEndState():
-        return getTerminalStateValue(newState)
+    if turnsLeft == 0 or newState.isEndState():
+        return getEvaluationValue(newState)
 
     choices = []
     for place in getPlaces(newState):
-        choices.append((getPlaceValue(place, not ownTurn, state)))
+        choices.append((getPlaceValue(place, not ownTurn, state, turnsLeft-1)))
 
     if ownTurn:
         return max(choices)
     return min(choices)
 
 
-def minimaxPlacement(state):
+def minimaxPlacement(state, turnsLeft):
     choices = []
     for place in getPlaces(state):
-        choices.append((getPlaceValue(place, False, state), place))
+        choices.append((getPlaceValue(place, False, state), place, turnsLeft-1))
     return max(choices)[1]
 
 

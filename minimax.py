@@ -91,6 +91,16 @@ class GameState:
     def isEndState(self):
         return (not bool(self.whitePieces)) or (not bool(self.blackPieces))
 
+    def printBoard(self):
+        print("Printing board")
+        board = [[ '-' for y in range(self.size) ] for x in range(self.size)]
+        for i,j in state.whitePieces:
+            board[i][j] = 'O'
+        for i,j in state.blackPieces:
+            board[i][j] = '@'
+        for row in board:
+            print(row)
+
 
 def getMoves(movementService):
     moveList = []

@@ -1,4 +1,7 @@
 # Some functions from Part A, modified to fit Part B's requirements
+START_PHASE = 0
+INITIAL_BOARD_SIZE = 8
+
 
 class GameState:
     """
@@ -15,9 +18,22 @@ class GameState:
         self.isWhitePlayer = isWhitePlayer
         self.isWhiteTurn = isWhiteTurn
 
-    def updateSize(self, newSize):
-        self.size = newSize
-        # call kill pieces that are outside borders
+    def removeOutOfBounds(self, pieces):
+        newPieces = set()
+        for i, j in pieces:
+            if self.withinBounds(i, j) and not self.corner(i, j):
+                print(i, j)
+                newPieces.add((i, j))
+        return newPieces
+
+    def shrink(self, newPhase): #TODO: handle corners
+        self.phase = START_PHASE + newPhase
+        self.size = INITIAL_BOARD_SIZE - 2 * newPhase
+        self.whitePieces = self.removeOutOfBounds(self.whitePieces).copy()
+        self.blackPieces = self.removeOutOfBounds(self.blackPieces).copy()
+        removeEatenPieces(self, True)
+        removeEatenPieces(self, False)
+
 
     def updateSets(self, newWhitePieces, newBlackPieces):
         """Updates the locations of the white and black pieces on the board."""
@@ -35,7 +51,7 @@ class GameState:
 
     def printBoard(self):
         print("Printing board")
-        board = [[ '-' for y in range(self.size) ] for x in range(self.size)]
+        board = [[ '-' for y in range(8) ] for x in range(8)]
         for i,j in self.whitePieces:
             board[i][j] = 'O'
         for i,j in self.blackPieces:
@@ -59,73 +75,75 @@ class GameState:
         """Checks if there are any pieces in the cell specified by (i, j)."""
         return ((i, j) not in self.blackPieces
                 and (i, j) not in self.whitePieces
-                and not corner(i, j, self))
+                and not self.corner(i, j))
 
     def canJumpRight_(self, i, j):
         """Checks if piece can jump right"""
-        if withinBounds(i+2, j, self) and self.isEmpty_(i+2, j):
+        if self.withinBounds(i+2, j) and self.isEmpty_(i+2, j):
             return (i+2, j)
 
     def canJumpLeft_(self, i, j):
         """Checks if piece can jump left"""
-        if withinBounds(i-2, j, self) and self.isEmpty_(i-2, j):
+        if self.withinBounds(i-2, j) and self.isEmpty_(i-2, j):
             return (i-2, j)
 
     def canJumpUp_(self, i, j):
         """Checks if piece can jump up"""
-        if withinBounds(i, j-2, self) and self.isEmpty_(i, j-2):
+        if self.withinBounds(i, j-2) and self.isEmpty_(i, j-2):
             return (i, j-2)
 
     def canJumpDown_(self, i, j):
         """Checks if piece can jump down"""
-        if withinBounds(i, j+2, self) and self.isEmpty_(i, j+2):
+        if self.withinBounds(i, j+2) and self.isEmpty_(i, j+2):
             return (i, j+2)
 
     def canGoRight_(self, i, j):
         """Checks if piece can move right"""
-        if withinBounds(i+1, j, self) and self.isEmpty_(i+1, j):
+        if self.withinBounds(i+1, j) and self.isEmpty_(i+1, j):
             return (i+1, j)
         return self.canJumpRight_(i, j)
 
     def canGoLeft_(self, i, j):
         """Checks if piece can move left"""
-        if withinBounds(i-1, j, self) and self.isEmpty_(i-1, j):
+        if self.withinBounds(i-1, j) and self.isEmpty_(i-1, j):
             return (i-1, j)
         return self.canJumpLeft_(i, j)
 
     def canGoUp_(self, i, j):
         """Checks if piece can move up"""
-        if withinBounds(i, j-1, self) and self.isEmpty_(i, j-1):
+        if self.withinBounds(i, j-1) and self.isEmpty_(i, j-1):
             return (i, j-1)
         return self.canJumpUp_(i, j)
 
     def canGoDown_(self, i, j):
         """Checks if piece can move down"""
-        if withinBounds(i, j+1, self) and self.isEmpty_(i, j+1):
+        if self.withinBounds(i, j+1) and self.isEmpty_(i, j+1):
             return (i, j+1)
         return self.canJumpDown_(i, j)
 
 
-def corner(i, j, state):
-    """Checks if coordinates given is a corner of the board."""
-    corner_coords = {0, state.size - 1}
-    return i in corner_coords and j in corner_coords
+    def corner(self, i, j):
+        """Checks if coordinates given is a corner of the board."""
+        corner_coords = {self.phase, INITIAL_BOARD_SIZE - self.phase - 1}
+        return i in corner_coords and j in corner_coords
 
 
-def withinBounds(i, j, state):
-    """Checks if coordinates given is on the board."""
-    return (0 <= i < state.size) and (0 <= j < state.size)
+    def withinBounds(self, i, j):
+        """Checks if coordinates given is on the board."""
+        return ((self.phase <= i < (self.size+self.phase)) and
+                (self.phase <= j < (self.size+self.phase)) and
+                not self.corner(i, j))
 
 
-def isEnemy(enemyPieces, coordinate, state):
-    """Checks if coordinates belong to the enemy (or is a corner)."""
-    i, j = coordinate
-    return withinBounds(i, j, state) and (coordinate in enemyPieces or corner(i, j, state))
+    def isEnemy(self, enemyPieces, coordinate):
+        """Checks if coordinates belong to the enemy (or is a corner)."""
+        i, j = coordinate
+        return self.withinBounds(i, j) and (coordinate in enemyPieces or self.corner(i, j))
 
 
-def canEat(enemyPieces, side1, side2, state):
-    """Checks a piece between side1 and side2 will be eaten."""
-    return isEnemy(enemyPieces, side1, state) and isEnemy(enemyPieces, side2, state)
+    def canEat(self, enemyPieces, side1, side2):
+        """Checks a piece between side1 and side2 will be eaten."""
+        return self.isEnemy(enemyPieces, side1) and self.isEnemy(enemyPieces, side2)
 
 
 def removeEatenPieces(state, eatWhite):
@@ -147,7 +165,7 @@ def removeEatenPieces(state, eatWhite):
 
         # check if piece can be eaten from up and down / left and right
         # by checking if within bounds and if they are corner or white.
-        if canEat(eatingPieces, up, down, state) or canEat(eatingPieces, left, right, state):
+        if state.canEat(eatingPieces, up, down) or state.canEat(eatingPieces, left, right):
             toRemove.append(piece)
     for pieceToRemove in toRemove:
         toEatPieces.remove(pieceToRemove)

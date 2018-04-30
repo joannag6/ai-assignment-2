@@ -1,7 +1,6 @@
 import random
 from moves import *
 
-INITIAL_BOARD_SIZE = 8
 PLACEMENT_LINE = 2
 STARTING_PIECES = 12
 LOOKAHEAD = 2
@@ -17,15 +16,19 @@ class Player:
         self.state = GameState(INITIAL_BOARD_SIZE, set(), set(), isWhite, isWhite)
         self.turns = 0
 
-    def shrink(self): #TODO: handle corners
-        pass
-
     def action(self, turns):
         """turns: int, total turns"""
         # check if turns is odd (black's turn)
         # check if turns > STARTING_PIECES * 2, (placing or moving stage)
         nextMove = None # if passing turn
         print("####################################################################")
+
+        if turns == MOVEMENT_ONE: # end of first moving stage
+            print("before")
+            self.state.printBoard()
+            self.state.shrink(1)
+            self.state.printBoard()
+            print("after")
 
         # check if turns is even (black's turn)
         if turns % 2 != 0:
@@ -68,6 +71,9 @@ class Player:
         """Update internal game state according to opponent's action"""
         self.turns += 1
 
+        if self.turns == MOVEMENT_ONE: # end of first moving stage
+            self.state.shrink(1)
+
         # check if turns is odd (black's turn)
         if self.turns % 2 != 0:
             self.state.isWhiteTurn = True
@@ -85,7 +91,6 @@ class Player:
         removeEatenPieces(self.state, self.state.isWhiteTurn)
 
         # TODO: Add check for endstate, and do something
-
 
 
 def getMoves(state):
@@ -113,7 +118,9 @@ def getPlaces(state):
         start, end = PLACEMENT_LINE, state.size
 
     for coord in [(x, y) for x in range(start, end) for y in range(state.size)]:
-        if coord not in state.whitePieces and coord not in state.blackPieces and not corner(coord[0], coord[1], state):
+        if (coord not in state.whitePieces and
+                coord not in state.blackPieces and
+                not state.corner(coord[0], coord[1])):
             placeList.append(coord)
     return placeList
 
@@ -239,7 +246,7 @@ def main():
     blackPlayer = Player("black")
 
 
-    for turns in range(1, MOVEMENT_ONE, 2):
+    for turns in range(1, MOVEMENT_ONE+5, 2):
         nextMove = whitePlayer.action(turns)
         print("white: " + str(nextMove))
         blackPlayer.update(nextMove)

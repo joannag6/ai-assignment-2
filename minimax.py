@@ -1,3 +1,4 @@
+import random
 from moves import *
 
 INITIAL_BOARD_SIZE = 8
@@ -141,7 +142,7 @@ def getMoves(movementService):
 
 
 def getPlaces(state):
-    placeList = set()
+    placeList = []
 
     if state.isWhiteTurn:
         start, end = 0, state.size - PLACEMENT_LINE
@@ -150,8 +151,7 @@ def getPlaces(state):
 
     for coord in [(x, y) for x in range(start, end) for y in range(state.size)]:
         if coord not in state.whitePieces and coord not in state.blackPieces and not corner(coord[0], coord[1], state.size):
-            placeList.add(coord)
-    print(placeList)
+            placeList.append(coord)
     return placeList
 
 
@@ -253,9 +253,9 @@ def getPlaceValue(place, ownTurn, state, turnsLeft):
 
 def minimaxPlacement(state, turnsLeft):
     choices = []
-    for place in getPlaces(state):
-        choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
-    return max(choices)[1]
+    #for place in getPlaces(state):
+    #    choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
+    return random.choice(getPlaces(state)) #max(choices)[1]
 
 
 def main():

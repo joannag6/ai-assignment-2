@@ -165,7 +165,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft):
 
     choices = []
     for nextMove in getMoves(newState):
-        choices.append((getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1)))
+        choices.append(getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1))
 
     if ownTurn:
         return max(choices)
@@ -177,7 +177,16 @@ def minimaxMovement(state, turnsLeft):
     for move in getMoves(state):
         choices.append((getMoveValue(move, False, state, turnsLeft-1), move))
     # print(choices)
-    return max(choices)[1]
+    return getRandMax(choices)[1]
+
+
+def getRandMin(tupList):
+    smallestVal = min(tupList)[0]
+    return random.choice([tup for tup in tupList if tup[0] == smallestVal])
+
+def getRandMax(tupList):
+    smallestVal = max(tupList)[0]
+    return random.choice([tup for tup in tupList if tup[0] == smallestVal])
 
 
 # returns integer value representing utility value

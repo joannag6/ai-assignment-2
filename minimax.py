@@ -113,7 +113,7 @@ def getPlaces(state):
         start, end = PLACEMENT_LINE, state.size
 
     for coord in [(x, y) for x in range(start, end) for y in range(state.size)]:
-        if coord not in state.whitePieces and coord not in state.blackPieces and not corner(coord[0], coord[1], state.size):
+        if coord not in state.whitePieces and coord not in state.blackPieces and not corner(coord[0], coord[1], state):
             placeList.append(coord)
     return placeList
 
@@ -175,7 +175,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft):
 def minimaxMovement(state, turnsLeft):
     choices = []
     for move in getMoves(state):
-        choices.append((getMoveValue(move, False, state, turnsLeft-1), move))
+        choices.append((getMoveValue(move, True, state, turnsLeft-1), move))
     # print(choices)
     return getRandMax(choices)[1]
 

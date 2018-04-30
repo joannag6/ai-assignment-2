@@ -1,16 +1,46 @@
 # Some functions from Part A, modified to fit Part B's requirements
 
-class Movement:
-    """Class for all movement functionality required for any piece."""
-    def __init__(self, state):
-        """Stores the current state of the game at setup. This lets the class
-        know where all the pieces are at the current point in time.
-        """
-        self.state = state
+class GameState:
+    """
+    Class which stores the state of the game at a given time. This includes
+    the locations of all the white pieces and all the black pieces on the board.
+    It also keeps track of phase, whose turn it is, and current size of board.b
+    """
 
-    def updateState(self, newState):
-        """Updates the current game state so calculations are up to date."""
-        self.state = newState
+    def __init__(self, boardSize, whitePieces, blackPieces, isWhitePlayer, isWhiteTurn):
+        self.size = boardSize
+        self.whitePieces = whitePieces
+        self.blackPieces = blackPieces
+        self.isWhitePlayer = isWhitePlayer
+        self.isWhiteTurn = isWhiteTurn
+
+    def updateSize(self, newSize):
+        self.size = newSize
+        # call kill pieces that are outside borders
+
+    def updateSets(self, newWhitePieces, newBlackPieces):
+        """Updates the locations of the white and black pieces on the board."""
+        self.whitePieces = newWhitePieces
+        self.blackPieces = newBlackPieces
+
+    # check if given state is an end state (there is a winner)
+    # The game ends if either player has fewer than 2 pieces remaining. In this
+    # case, the player with 2 or more pieces remaining wins the game. If both
+    # players have fewer than 2 pieces remaining as a result of the same turn
+    # (for example, due to multiple pieces being eliminated during the shrinking
+    # of the board), then the game ends in a tie.
+    def isEndState(self):
+        return (len(self.whitePieces) < 2) or (len(self.blackPieces) < 2)
+
+    def printBoard(self):
+        print("Printing board")
+        board = [[ '-' for y in range(self.size) ] for x in range(self.size)]
+        for i,j in self.whitePieces:
+            board[i][j] = 'O'
+        for i,j in self.blackPieces:
+            board[i][j] = '@'
+        for row in board:
+            print(row)
 
     def calcMovesForCoord(self, coord):
         """Returns a list of all coordinates reachable from given coord."""
@@ -26,51 +56,51 @@ class Movement:
 
     def isEmpty_(self, i, j):
         """Checks if there are any pieces in the cell specified by (i, j)."""
-        return ((i, j) not in self.state.blackPieces
-                and (i, j) not in self.state.whitePieces
-                and not corner(i, j, self.state.size))
+        return ((i, j) not in self.blackPieces
+                and (i, j) not in self.whitePieces
+                and not corner(i, j, self.size))
 
     def canJumpRight_(self, i, j):
         """Checks if piece can jump right"""
-        if withinBounds(i+2, j, self.state.size) and self.isEmpty_(i+2, j):
+        if withinBounds(i+2, j, self.size) and self.isEmpty_(i+2, j):
             return (i+2, j)
 
     def canJumpLeft_(self, i, j):
         """Checks if piece can jump left"""
-        if withinBounds(i-2, j, self.state.size) and self.isEmpty_(i-2, j):
+        if withinBounds(i-2, j, self.size) and self.isEmpty_(i-2, j):
             return (i-2, j)
 
     def canJumpUp_(self, i, j):
         """Checks if piece can jump up"""
-        if withinBounds(i, j-2, self.state.size) and self.isEmpty_(i, j-2):
+        if withinBounds(i, j-2, self.size) and self.isEmpty_(i, j-2):
             return (i, j-2)
 
     def canJumpDown_(self, i, j):
         """Checks if piece can jump down"""
-        if withinBounds(i, j+2, self.state.size) and self.isEmpty_(i, j+2):
+        if withinBounds(i, j+2, self.size) and self.isEmpty_(i, j+2):
             return (i, j+2)
 
     def canGoRight_(self, i, j):
         """Checks if piece can move right"""
-        if withinBounds(i+1, j, self.state.size) and self.isEmpty_(i+1, j):
+        if withinBounds(i+1, j, self.size) and self.isEmpty_(i+1, j):
             return (i+1, j)
         return self.canJumpRight_(i, j)
 
     def canGoLeft_(self, i, j):
         """Checks if piece can move left"""
-        if withinBounds(i-1, j, self.state.size) and self.isEmpty_(i-1, j):
+        if withinBounds(i-1, j, self.size) and self.isEmpty_(i-1, j):
             return (i-1, j)
         return self.canJumpLeft_(i, j)
 
     def canGoUp_(self, i, j):
         """Checks if piece can move up"""
-        if withinBounds(i, j-1, self.state.size) and self.isEmpty_(i, j-1):
+        if withinBounds(i, j-1, self.size) and self.isEmpty_(i, j-1):
             return (i, j-1)
         return self.canJumpUp_(i, j)
 
     def canGoDown_(self, i, j):
         """Checks if piece can move down"""
-        if withinBounds(i, j+1, self.state.size) and self.isEmpty_(i, j+1):
+        if withinBounds(i, j+1, self.size) and self.isEmpty_(i, j+1):
             return (i, j+1)
         return self.canJumpDown_(i, j)
 

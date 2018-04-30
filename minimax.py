@@ -1,8 +1,10 @@
 from moves import *
 
 INITIAL_BOARD_SIZE = 8
+PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD = 3
+LOOKAHEAD = 2
+LOOKAHEAD_MOVE = 20
 MOVEMENT_ONE = 128 + STARTING_PIECES * 2
 MOVEMENT_TWO = 64 + MOVEMENT_ONE + STARTING_PIECES * 2
 
@@ -10,8 +12,8 @@ MOVEMENT_TWO = 64 + MOVEMENT_ONE + STARTING_PIECES * 2
 class Player:
     def __init__(self, colour):
         self.colour = colour
-        isWhite = True if self.colour == "white" else isWhite = False
-        self.state = GameState(INITIAL_BOARD_SIZE, {}, {}, isWhite, isWhite)
+        isWhite = True if self.colour == "white" else False
+        self.state = GameState(INITIAL_BOARD_SIZE, set(), set(), isWhite, isWhite)
         self.movementService = Movement(self.state)
         self.turns = 0
 
@@ -24,16 +26,25 @@ class Player:
         # check if turns > STARTING_PIECES * 2, (placing or moving stage)
         nextMove = None # if passing turn
 
-        if (self.turns + 1) <= STARTING_PIECES * 2:
-            nextMove = minimaxPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - (self.turns+1)))
+        # check if turns is even (black's turn)
+        if turns % 2 != 0:
+            self.state.isWhiteTurn = True
         else:
-            if (MOVEMENT_ONE - (self.turns+1) <= 0):
-                turnsLeft = MOVEMENT_TWO - (self.turns+1)
+            self.state.isWhiteTurn = False
+
+        if turns <= STARTING_PIECES * 2:
+            nextMove = minimaxPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
+        else:
+            if (MOVEMENT_ONE - turns <= 0):
+                turnsLeft = MOVEMENT_TWO - turns
             else:
-                turnsLeft = MOVEMENT_ONE - (self.turns+1)
-            nextMove = minimaxMovement(self.movementService, min(LOOKAHEAD, turnsLeft))
+                turnsLeft = MOVEMENT_ONE - turns
+            print(turnsLeft)
+            nextMove = minimaxMovement(self.movementService, min(LOOKAHEAD_MOVE, turnsLeft))
 
         self.update(nextMove)
+
+        self.state.printBoard()
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
@@ -58,21 +69,22 @@ class Player:
         self.turns += 1
 
         # check if turns is odd (black's turn)
-        if self.turns % 2 == 0:
+        if self.turns % 2 != 0:
             self.state.isWhiteTurn = True
         else:
             self.state.isWhiteTurn = False
 
-        if turns <= STARTING_PIECES * 2:
+        if self.turns <= STARTING_PIECES * 2:
             # update placement
-            updatePlacement(action)
+            self.updatePlacement(action)
         else:
             # update movement
-            updateMovement(action)
+            self.updateMovement(action)
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
 
+        # TODO: Add check for endstate, and do something
 
 class GameState:
     """
@@ -109,9 +121,9 @@ class GameState:
     def printBoard(self):
         print("Printing board")
         board = [[ '-' for y in range(self.size) ] for x in range(self.size)]
-        for i,j in state.whitePieces:
+        for i,j in self.whitePieces:
             board[i][j] = 'O'
-        for i,j in state.blackPieces:
+        for i,j in self.blackPieces:
             board[i][j] = '@'
         for row in board:
             print(row)
@@ -129,10 +141,17 @@ def getMoves(movementService):
 
 
 def getPlaces(state):
-    placeList = []
-    for coord in [(x, y) for x in range(state.size) and y in range(state.size)]:
-        if coord not in state.whitePieces and coord not in state.blackPieces:
-            placeList.append(coord)
+    placeList = set()
+
+    if state.isWhiteTurn:
+        start, end = 0, state.size - PLACEMENT_LINE
+    else:
+        start, end = PLACEMENT_LINE, state.size
+
+    for coord in [(x, y) for x in range(start, end) for y in range(state.size)]:
+        if coord not in state.whitePieces and coord not in state.blackPieces and not corner(coord[0], coord[1], state.size):
+            placeList.add(coord)
+    print(placeList)
     return placeList
 
 
@@ -181,7 +200,7 @@ def getMoveValue(move, ownTurn, movementService, turnsLeft):
 
     choices = []
     for move in getMoves(movementService):
-        choices.append((getMoveValue(move, state, not ownTurn, movementService, turnsLeft-1)))
+        choices.append((getMoveValue(move, newState, not ownTurn, movementService, turnsLeft-1)))
 
     if ownTurn:
         return max(choices)
@@ -191,15 +210,13 @@ def getMoveValue(move, ownTurn, movementService, turnsLeft):
 def minimaxMovement(movementService, turnsLeft):
     choices = []
     for move in getMoves(movementService):
-        choices.append((getMoveValue(move, False, movementService), move, turnsLeft-1))
+        choices.append((getMoveValue(move, False, movementService, turnsLeft-1), move))
     return max(choices)[1]
 
 
 # returns integer value representing utility value
 def getPlaceValue(place, ownTurn, state, turnsLeft):
     # just implement for moving stage first
-
-    state = movementService.state
 
     # if ownTurn is True, get max.
     newWhitePieces = state.whitePieces.copy()
@@ -220,12 +237,14 @@ def getPlaceValue(place, ownTurn, state, turnsLeft):
     removeEatenPieces(newState, not newState.isWhiteTurn)
     removeEatenPieces(newState, newState.isWhiteTurn)
 
+    # newState.printBoard()
+
     if turnsLeft == 0 or newState.isEndState():
         return getEvaluationValue(newState)
 
     choices = []
     for place in getPlaces(newState):
-        choices.append((getPlaceValue(place, not ownTurn, state, turnsLeft-1)))
+        choices.append((getPlaceValue(place, not ownTurn, newState, turnsLeft-1)))
 
     if ownTurn:
         return max(choices)
@@ -235,12 +254,24 @@ def getPlaceValue(place, ownTurn, state, turnsLeft):
 def minimaxPlacement(state, turnsLeft):
     choices = []
     for place in getPlaces(state):
-        choices.append((getPlaceValue(place, False, state), place, turnsLeft-1))
+        choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
     return max(choices)[1]
 
 
 def main():
-    movementService = Movement(GameState(INITIAL_BOARD_SIZE, {}, {}, True, True))
+    #movementService = Movement(GameState(INITIAL_BOARD_SIZE, set(), set(), True, True))
+    whitePlayer = Player("white")
+    blackPlayer = Player("black")
+
+
+    for turns in range(1, STARTING_PIECES * 2 + 30, 2):
+        nextMove = whitePlayer.action(turns)
+        print("white: " + str(nextMove))
+        blackPlayer.update(nextMove)
+
+        nextMove = blackPlayer.action(turns+1)
+        print("black: " + str(nextMove))
+        whitePlayer.update(nextMove)
 
 if __name__ == "__main__":
     main()

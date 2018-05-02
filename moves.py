@@ -22,11 +22,12 @@ class GameState:
         newPieces = set()
         for i, j in pieces:
             if self.withinBounds(i, j) and not self.corner(i, j):
-                print(i, j)
                 newPieces.add((i, j))
         return newPieces
 
+
     def shrink(self, newPhase): #TODO: handle corners
+        if self.phase == START_PHASE + newPhase: return
         self.phase = START_PHASE + newPhase
         self.size = INITIAL_BOARD_SIZE - 2 * newPhase
         self.whitePieces = self.removeOutOfBounds(self.whitePieces).copy()

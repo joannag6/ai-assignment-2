@@ -164,10 +164,8 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
     # newState.printBoard()
 
     if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-        print("shrink to Phase 1")
         newState.shrink(1)
     if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
-        print("shrink to Phase 2")
         newState.shrink(2)
 
     # run check if anything eaten, priority determined by turn
@@ -179,7 +177,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
 
     choices = []
     for nextMove in getMoves(newState):
-        choices.append(getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns))
+        choices.append(getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns+1))
 
     if choices == []:
         print("no more choices")
@@ -200,14 +198,12 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
 def minimaxMovement(state, turnsLeft, turns):
     choices = []
     if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-        print("shrink to Phase 1 - start")
         state.shrink(1)
     if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
-        print("shrink to Phase 2 - start")
         state.shrink(2)
 
     for move in getMoves(state):
-        choices.append((getMoveValue(move, True, state, turnsLeft-1, turns), move))
+        choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1), move))
     # print(choices)
 
     if choices == []:

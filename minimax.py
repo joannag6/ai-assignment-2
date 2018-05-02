@@ -180,14 +180,14 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
         choices.append(getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns+1))
 
     if choices == []:
-        print("no more choices")
-        print(state.whitePieces)
-        print(state.blackPieces)
-        print(move)
-        print(newState.whitePieces)
-        print(newState.blackPieces)
+        # print("no more choices")
+        # print(state.whitePieces)
+        # print(state.blackPieces)
+        # print(move)
+        # print(newState.whitePieces)
+        # print(newState.blackPieces)
         if (getMoves(newState) == []):
-            print("no new moves?")
+            # print("no new moves?")
         return getEvaluationValue(newState) # TODO or None?
 
     if ownTurn:

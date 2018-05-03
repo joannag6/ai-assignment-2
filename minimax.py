@@ -301,9 +301,12 @@ def minimaxPlacement(state, turnsLeft):
 # Function that is meant to make good placements lol. 
 def heurPlacement(state, turnsLeft):
     availableCells = getPlaces(state)
+    killList = []
     # for every available cell:
+    for (x,y) in availableCells:
         # create list of cells where we can eliminate them
-        # killList = []
+        if canEliminate((x,y)):
+            killList.append((x,y))
         # for cell in killList:
             # if killlist empty, break
             # Find the one with the most zone of control
@@ -318,6 +321,47 @@ def heurPlacement(state, turnsLeft):
             # find the cells with the most control. 
             # if there is tie, choose cells in quad of least ctrl
             # If there is still tie, random. 
+
+def canEliminate(state, coord):
+    x,y = coord
+    adjacentCells = [(x-1,y),(x-1,y-1),(),()]
+    adjacentAdjacentCells = []
+
+# Function that determines if a cell is within range of the board. 
+def inBoardRange(x,y):
+    return x>-1 and x<8 and y >-1 and y <8
+
+def up(x,y):
+    return x,y-1
+def down(x,y):
+    return x, y+1
+def left(x,y):
+    return x-1, y
+def right(x,y):
+    return x+1, y
+
+def twoUp(x,y):
+    return x,y-2
+def twoDown(x,y):
+    return x, y+2
+def twoLeft(x,y):
+    return x-2, y
+def twoRight(x,y):
+    return x+2, y
+
+def adjacentCells(x,y):
+    adjacentCells = [up(x,y), down(x,y), left(x,y), right(x,y)]
+    for cell in adjacentCells:
+        if not inBoardRange(cell):
+            adjacentCells.remove(cell)
+    return adjacentCells
+
+def twoAdjacentCells(x,y):
+    adjacentAdjacentCells = [twoUp(x,y), twoDown(x,y), twoLeft(x,y), twoRight(x,y)]
+    for cell in adjacentCells:
+        if not inBoardRange(cell):
+            adjacentCells.remove(cell)
+    return adjacentAdjacentCells
 
 
 def main():

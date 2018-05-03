@@ -1,4 +1,5 @@
 # Some functions from Part A, modified to fit Part B's requirements
+# Also contains newly written helper functions, related to cell operations and movement.
 START_PHASE = 0
 INITIAL_BOARD_SIZE = 8
 
@@ -171,3 +172,34 @@ def removeEatenPieces(state, eatWhite):
     for pieceToRemove in toRemove:
         toEatPieces.remove(pieceToRemove)
     return toEatPieces
+
+# Function that determines if a cell is within range of the board. 
+def inBoardRange(x,y):
+    return x>-1 and x<8 and y >-1 and y <8
+
+def up(x,y):
+    return x,y-1
+def down(x,y):
+    return x, y+1
+def left(x,y):
+    return x-1, y
+def right(x,y):
+    return x+1, y
+
+def twoUp(x,y):
+    return x,y-2
+def twoDown(x,y):
+    return x, y+2
+def twoLeft(x,y):
+    return x-2, y
+def twoRight(x,y):
+    return x+2, y
+
+def adjacentCells(x,y):
+    adjacentCells = [up(x,y), down(x,y), left(x,y), right(x,y)]
+    for cell in adjacentCells:
+        if not inBoardRange(cell):
+            adjacentCells.remove(cell)
+    return adjacentCells
+
+

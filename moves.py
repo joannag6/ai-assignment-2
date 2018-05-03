@@ -54,9 +54,9 @@ class GameState:
         print("Printing board")
         board = [[ '-' for y in range(8) ] for x in range(8)]
         for i,j in self.whitePieces:
-            board[i][j] = 'O'
+            board[j][i] = 'O'
         for i,j in self.blackPieces:
-            board[i][j] = '@'
+            board[j][i] = '@'
         for row in board:
             print(row)
 

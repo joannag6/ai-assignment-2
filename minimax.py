@@ -5,8 +5,8 @@ PLACEMENT_LINE = 2
 STARTING_PIECES = 12
 LOOKAHEAD = 2
 LOOKAHEAD_MOVE = 3
-MOVEMENT_ONE = 5 + STARTING_PIECES * 2#128 + STARTING_PIECES * 2
-MOVEMENT_TWO = 5 + MOVEMENT_ONE + STARTING_PIECES * 2#64 + MOVEMENT_ONE + STARTING_PIECES * 2
+MOVEMENT_ONE = 128 + STARTING_PIECES * 2#128 + STARTING_PIECES * 2
+MOVEMENT_TWO = 64 + MOVEMENT_ONE + STARTING_PIECES * 2#64 + MOVEMENT_ONE + STARTING_PIECES * 2
 
 
 class Player:
@@ -43,6 +43,37 @@ class Player:
             #     turnsLeft = MOVEMENT_ONE - turns
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
 
+        self.update(nextMove)
+
+        self.state.printBoard()
+
+        # return (x, y) for placing piece
+        # return ((oldx, oldy), (newx, newy)) for moving piece
+        return nextMove
+
+    # TODO: remove. Hackish way to get user input for placing phase, used in placementTest.py
+    def userAction(self, turns):
+        """turns: int, total turns"""
+        # check if turns is odd (black's turn)
+        # check if turns > STARTING_PIECES * 2, (placing or moving stage)
+        nextMove = None # if passing turn
+        print("####################################################################")
+
+        if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+            self.state.shrink(1)
+        if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+            self.state.shrink(2)
+
+        # check if turns is even (black's turn)
+        if turns % 2 != 0:
+            self.state.isWhiteTurn = True
+        else:
+            self.state.isWhiteTurn = False
+
+        # Collects user input and uses that for nextMove. 
+        x = int(input("Enter a first digit of coord: "))
+        y = int(input("Enter a second digit of coord: "))
+        nextMove = (x,y)
         self.update(nextMove)
 
         self.state.printBoard()
@@ -188,7 +219,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
         # print(newState.blackPieces)
         if (getMoves(newState) == []):
             # print("no new moves?")
-        return getEvaluationValue(newState) # TODO or None?
+            return getEvaluationValue(newState) # TODO or None?
 
     if ownTurn:
         return max(choices)
@@ -258,12 +289,16 @@ def getPlaceValue(place, ownTurn, state, turnsLeft):
     return min(choices)
 
 
+# Function that just makes valid placements. 
 def minimaxPlacement(state, turnsLeft):
     choices = []
     #for place in getPlaces(state):
     #    choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
     return random.choice(getPlaces(state)) #max(choices)[1]
 
+# Function that is meant to make good placements lol. 
+def heurPlacement(state, turnsLeft):
+    return random.choice(getPlaces(state))
 
 def main():
     #movementService = Movement(GameState(INITIAL_BOARD_SIZE, set(), set(), True, True))

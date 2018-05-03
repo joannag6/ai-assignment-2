@@ -302,24 +302,30 @@ def minimaxPlacement(state, turnsLeft):
 def heurPlacement(state, turnsLeft):
     availableCells = getPlaces(state)
     killList = []
-    # for every available cell:
-    for (x,y) in availableCells:
+    # Construct a list of cells that can result in kills. 
+    for cell in availableCells:
         # create list of cells where we can eliminate them
-        if canEliminate((x,y)):
-            killList.append((x,y))
+        if canEliminate(cell):
+            killList.append(cell)
+    # if that list is not empty, then we choose the best killing move
+    if len(killList)>0:
         # for cell in killList:
-            # if killlist empty, break
-            # Find the one with the most zone of control
+        for coord in killList:
+            # TODO: Find the one with the most zone of control
             # If no ties, return that cell
             # if there are ties:
                 # get our weakest quadrant
                 # put it in cell in weakest quad
                 # return that cell.
-        # if we reach here, killList is empty. 
-        # If we can't kill, we just play for control. 
-        # for cell in availableCells:
-            # find the cells with the most control. 
-            # if there is tie, choose cells in quad of least ctrl
+    
+    # if we reach here, killList is empty. 
+    # If we can't kill, we just play for control. 
+    controlList = []
+    # for cell in availableCells:
+    for cell in availableCells:
+        # TODO: find the cells with the most control. 
+        controlList.append(cell, controlValue(cell))
+            # TODO: if there is tie, choose cells in quad of least ctrl
             # If there is still tie, random. 
 
 def canEliminate(state, coord):
@@ -334,11 +340,11 @@ def canEliminate(state, coord):
 
     # if adjacent coords contain enemy and one more cell in that 
     # direction contains ally piece, we can eliminate that enemy.
-    up = up(coord)
-    twoUp = twoUp(coord)
-    if inBoardRange(up) and inBoardRange(twoUp) and state.isEnemy(enemyPieces, up) and state.isAlly(allyPieces, twoUp):
-    return true  
-
+    coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
+    for coord1,coord2 in coordPairsToCheck:
+        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEnemy(enemyPieces, coord1) and state.isAlly(allyPieces, coord2):
+            return true
+    return false
 
 
 def main():

@@ -177,6 +177,8 @@ def removeEatenPieces(state, eatWhite):
 def inBoardRange(x,y):
     return x>-1 and x<8 and y >-1 and y <8
 
+# Functions that return coord of cells up down left right, 
+# does not check for board range. 
 def up(x,y):
     return x,y-1
 def down(x,y):
@@ -186,6 +188,8 @@ def left(x,y):
 def right(x,y):
     return x+1, y
 
+# Functions that return coord of cells that are two up, down,
+# left, right. Does not check for board range. 
 def twoUp(x,y):
     return x,y-2
 def twoDown(x,y):
@@ -195,6 +199,8 @@ def twoLeft(x,y):
 def twoRight(x,y):
     return x+2, y
 
+# Function that returns coord of adjacent cells, checks for board
+# range. 
 def adjacentCells(x,y):
     adjacentCells = [up(x,y), down(x,y), left(x,y), right(x,y)]
     for cell in adjacentCells:
@@ -202,4 +208,11 @@ def adjacentCells(x,y):
             adjacentCells.remove(cell)
     return adjacentCells
 
-
+# Function that returns coord of adjacent cells, 
+# two cells away, checks for board range. 
+def twoAdjacentCells(x,y):
+    adjacentAdjacentCells = [twoUp(x,y), twoDown(x,y), twoLeft(x,y), twoRight(x,y)]
+    for cell in adjacentCells:
+        if not inBoardRange(cell):
+            adjacentCells.remove(cell)
+    return adjacentAdjacentCells

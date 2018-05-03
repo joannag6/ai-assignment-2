@@ -150,7 +150,7 @@ def getPlaces(state):
     else:
         start, end = PLACEMENT_LINE, state.size
 
-    for coord in [(x, y) for x in range(start, end) for y in range(state.size)]:
+    for coord in [(x, y) for y in range(start, end) for x in range(state.size)]:
         if (coord not in state.whitePieces and
                 coord not in state.blackPieces and
                 not state.corner(coord[0], coord[1])):
@@ -294,7 +294,9 @@ def minimaxPlacement(state, turnsLeft):
     choices = []
     #for place in getPlaces(state):
     #    choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
-    return random.choice(getPlaces(state)) #max(choices)[1]
+    x = getPlaces(state)
+    print(x)
+    return random.choice(x) #max(choices)[1]
 
 # Function that is meant to make good placements lol. 
 def heurPlacement(state, turnsLeft):

@@ -142,6 +142,11 @@ class GameState:
         i, j = coordinate
         return self.withinBounds(i, j) and (coordinate in enemyPieces or self.corner(i, j))
 
+    def isAlly(self, allyPieces, coordinate):
+        """Checks if coordinates belong to ally"""
+        i, j = coordinate
+        return self.withinBounds(i, j) and (coordinate in enemyPieces or self.corner(i, j))
+
 
     def canEat(self, enemyPieces, side1, side2):
         """Checks a piece between side1 and side2 will be eaten."""

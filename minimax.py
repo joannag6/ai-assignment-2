@@ -300,7 +300,25 @@ def minimaxPlacement(state, turnsLeft):
 
 # Function that is meant to make good placements lol. 
 def heurPlacement(state, turnsLeft):
-    return random.choice(getPlaces(state))
+    availableCells = getPlaces(state)
+    # for every available cell:
+        # create list of cells where we can eliminate them
+        # killList = []
+        # for cell in killList:
+            # if killlist empty, break
+            # Find the one with the most zone of control
+            # If no ties, return that cell
+            # if there are ties:
+                # get our weakest quadrant
+                # put it in cell in weakest quad
+                # return that cell.
+        # if we reach here, killList is empty. 
+        # If we can't kill, we just play for control. 
+        # for cell in availableCells:
+            # find the cells with the most control. 
+            # if there is tie, choose cells in quad of least ctrl
+            # If there is still tie, random. 
+
 
 def main():
     #movementService = Movement(GameState(INITIAL_BOARD_SIZE, set(), set(), True, True))

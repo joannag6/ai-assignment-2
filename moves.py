@@ -73,8 +73,9 @@ class GameState:
                 moveList.append((coord, move))
         return moveList
 
-    def isEmpty_(self, i, j):
+    def isEmpty(self, coordinate):
         """Checks if there are any pieces in the cell specified by (i, j)."""
+        i,j = coordinate
         return ((i, j) not in self.blackPieces
                 and (i, j) not in self.whitePieces
                 and not self.corner(i, j))
@@ -145,8 +146,8 @@ class GameState:
     def isAlly(self, allyPieces, coordinate):
         """Checks if coordinates belong to ally"""
         i, j = coordinate
-        return self.withinBounds(i, j) and (coordinate in enemyPieces or self.corner(i, j))
-
+        return self.withinBounds(i, j) and (coordinate in allyPieces or self.corner(i, j))
+    
 
     def canEat(self, enemyPieces, side1, side2):
         """Checks a piece between side1 and side2 will be eaten."""
@@ -179,29 +180,38 @@ def removeEatenPieces(state, eatWhite):
     return toEatPieces
 
 # Function that determines if a cell is within range of the board. 
-def inBoardRange(x,y):
+def inBoardRange(coord):
+    x,y = coord
     return x>-1 and x<8 and y >-1 and y <8
 
 # Functions that return coord of cells up down left right, 
 # does not check for board range. 
-def up(x,y):
+def up(coord):
+    x,y = coord
     return x,y-1
-def down(x,y):
+def down(coord):
+    x,y = coord
     return x, y+1
-def left(x,y):
+def left(coord):
+    x,y = coord
     return x-1, y
-def right(x,y):
+def right(coord):
+    x,y = coord
     return x+1, y
 
 # Functions that return coord of cells that are two up, down,
 # left, right. Does not check for board range. 
-def twoUp(x,y):
+def twoUp(coord):
+    x,y = coord
     return x,y-2
-def twoDown(x,y):
+def twoDown(coord):
+    x,y = coord
     return x, y+2
-def twoLeft(x,y):
+def twoLeft(coord):
+    x,y = coord
     return x-2, y
-def twoRight(x,y):
+def twoRight(coord):
+    x,y = coord
     return x+2, y
 
 # Function that returns coord of adjacent cells, checks for board

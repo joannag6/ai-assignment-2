@@ -35,7 +35,7 @@ class Player:
             self.state.isWhiteTurn = False
 
         if turns <= STARTING_PIECES * 2:
-            nextMove = minimaxPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
+            nextMove = heurPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
         else:
             # if (MOVEMENT_ONE - turns <= 0):
             #     turnsLeft = MOVEMENT_TWO - turns
@@ -298,37 +298,56 @@ def minimaxPlacement(state, turnsLeft):
     print(x)
     return random.choice(x) #max(choices)[1]
 
-# Function that is meant to make good placements lol. 
+# Function that is meant to make good placements.
 def heurPlacement(state, turnsLeft):
     availableCells = getPlaces(state)
+    
+    # First, we prioritize kills. 
     killList = []
     # Construct a list of cells that can result in kills. 
     for cell in availableCells:
-        # create list of cells where we can eliminate them
-        if canEliminate(cell):
+        if killPossible(state,cell):
             killList.append(cell)
-    # if that list is not empty, then we choose the best killing move
     if len(killList)>0:
-        # for cell in killList:
-        for coord in killList:
-            # TODO: Find the one with the most zone of control
-            # If no ties, return that cell
-            # if there are ties:
-                # get our weakest quadrant
-                # put it in cell in weakest quad
-                # return that cell.
-    
-    # if we reach here, killList is empty. 
+        return random.choice(killList)
+
+
+    # if we reach here, no kills possible. 
     # If we can't kill, we just play for control. 
     controlList = []
-    # for cell in availableCells:
+    # Construct a list for control evaluation. 
     for cell in availableCells:
-        # TODO: find the cells with the most control. 
-        controlList.append(cell, controlValue(cell))
-            # TODO: if there is tie, choose cells in quad of least ctrl
-            # If there is still tie, random. 
+        controlList.append((controlValue(state,cell), cell))
+    # TODO: if there is tie, choose cells in quad of least ctrl
+    maxControlScore,maxControlCoord = max(controlList)
+    # i is the max control value we have in the list
+    for entry in controlList:
+        controlScore, coord = entry 
+        if controlScore < maxControlScore:
+            controlList.remove(entry)
+    a,b = random.choice(controlList)
+    return b
 
-def canEliminate(state, coord):
+# We control an adjacent cell if the next one in that direction is not enemy cell, or not out of bounds
+# That first adjacent cell has to be empty. 
+def controlValue(state, coord):
+    controlScore = 0
+    # if is white turn, then enemy pieces are black.
+    # if is black turn, enemy pieces are white. 
+    if state.isWhiteTurn:
+        enemyPieces = state.blackPieces
+        allyPieces = state.whitePieces
+    else:
+        enemyPieces = state.whitePieces
+        allyPieces = state.blackPieces
+    coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
+    for coord1,coord2 in coordPairsToCheck:
+        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty(coord1) and not state.isEnemy(enemyPieces,coord2):
+            controlScore += 1
+    return controlScore       
+
+def killPossible(state, coord):
+    x,y = coord
     # if is white turn, then enemy pieces are black.
     # if is black turn, enemy pieces are white. 
     if state.isWhiteTurn:
@@ -343,8 +362,8 @@ def canEliminate(state, coord):
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
         if inBoardRange(coord1) and inBoardRange(coord2) and state.isEnemy(enemyPieces, coord1) and state.isAlly(allyPieces, coord2):
-            return true
-    return false
+            return True
+    return False
 
 
 def main():

@@ -323,45 +323,22 @@ def heurPlacement(state, turnsLeft):
             # If there is still tie, random. 
 
 def canEliminate(state, coord):
-    x,y = coord
-    adjacentCells = [(x-1,y),(x-1,y-1),(),()]
-    adjacentAdjacentCells = []
+    # if is white turn, then enemy pieces are black.
+    # if is black turn, enemy pieces are white. 
+    if state.isWhiteTurn:
+        enemyPieces = state.blackPieces
+        allyPieces = state.whitePieces
+    else:
+        enemyPieces = state.whitePieces
+        allyPieces = state.blackPieces
 
-# Function that determines if a cell is within range of the board. 
-def inBoardRange(x,y):
-    return x>-1 and x<8 and y >-1 and y <8
+    # if adjacent coords contain enemy and one more cell in that 
+    # direction contains ally piece, we can eliminate that enemy.
+    up = up(coord)
+    twoUp = twoUp(coord)
+    if inBoardRange(up) and inBoardRange(twoUp) and state.isEnemy(enemyPieces, up) and state.isAlly(allyPieces, twoUp):
+    return true  
 
-def up(x,y):
-    return x,y-1
-def down(x,y):
-    return x, y+1
-def left(x,y):
-    return x-1, y
-def right(x,y):
-    return x+1, y
-
-def twoUp(x,y):
-    return x,y-2
-def twoDown(x,y):
-    return x, y+2
-def twoLeft(x,y):
-    return x-2, y
-def twoRight(x,y):
-    return x+2, y
-
-def adjacentCells(x,y):
-    adjacentCells = [up(x,y), down(x,y), left(x,y), right(x,y)]
-    for cell in adjacentCells:
-        if not inBoardRange(cell):
-            adjacentCells.remove(cell)
-    return adjacentCells
-
-def twoAdjacentCells(x,y):
-    adjacentAdjacentCells = [twoUp(x,y), twoDown(x,y), twoLeft(x,y), twoRight(x,y)]
-    for cell in adjacentCells:
-        if not inBoardRange(cell):
-            adjacentCells.remove(cell)
-    return adjacentAdjacentCells
 
 
 def main():

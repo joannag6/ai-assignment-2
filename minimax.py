@@ -83,7 +83,7 @@ class Player:
             self.state.whitePieces.remove(move[0])
             self.state.whitePieces.add(move[1])
         else:
-            self.state.blackPieces.remove(move[0])
+            self.state. blackPieces.remove(move[0])
             self.state.blackPieces.add(move[1])
 
     # Function that is called only by player, to update it's own state

@@ -299,33 +299,36 @@ def minimaxPlacement(state, turnsLeft):
     return random.choice(x) #max(choices)[1]
 
 # Function that is meant to make good placements.
+# TODO, there is bug in controlList, it does not remove suboptimal coords. 
 def heurPlacement(state, turnsLeft):
     availableCells = getPlaces(state)
-    
     # First, we prioritize kills. 
     killList = []
     # Construct a list of cells that can result in kills. 
     for cell in availableCells:
-        if killPossible(state,cell):
-            killList.append(cell)
+        if killValue(state,cell)>0:
+            killList.append((killValue,cell))
     if len(killList)>0:
-        return random.choice(killList)
-
+        returnKillValue, returnCell = random.choice(killList)
+        return returnCell
 
     # if we reach here, no kills possible. 
     # If we can't kill, we just play for control. 
     controlList = []
-    # Construct a list for control evaluation. 
+    # Construct a list for control evaluation.
+    print(availableCells) 
     for cell in availableCells:
         controlList.append((controlValue(state,cell), cell))
     # TODO: if there is tie, choose cells in quad of least ctrl
     maxControlScore,maxControlCoord = max(controlList)
     # i is the max control value we have in the list
+    print(maxControlScore)
+    newList = []
     for entry in controlList:
-        controlScore, coord = entry 
-        if controlScore < maxControlScore:
-            controlList.remove(entry)
-    a,b = random.choice(controlList)
+        if entry[0] is maxControlScore:
+            newList.append(entry)
+    a,b = random.choice(newList)
+    print(a,b)
     return b
 
 # We control an adjacent cell if the next one in that direction is not enemy cell, or not out of bounds
@@ -346,8 +349,9 @@ def controlValue(state, coord):
             controlScore += 1
     return controlScore       
 
-def killPossible(state, coord):
+def killValue(state, coord):
     x,y = coord
+    killValue = 0
     # if is white turn, then enemy pieces are black.
     # if is black turn, enemy pieces are white. 
     if state.isWhiteTurn:
@@ -362,8 +366,8 @@ def killPossible(state, coord):
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
         if inBoardRange(coord1) and inBoardRange(coord2) and state.isEnemy(enemyPieces, coord1) and state.isAlly(allyPieces, coord2):
-            return True
-    return False
+            killValue+=1
+    return killValue
 
 
 def main():

@@ -24,7 +24,9 @@ class Player:
         # check if turns is odd (black's turn)
         # check if turns > STARTING_PIECES * 2, (placing or moving stage)
         nextMove = None # if passing turn
-        print("####################################################################")
+        #print("####################################################################")
+        #self.turns += 1
+   
 
         if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
             self.state.shrink(1)
@@ -53,6 +55,11 @@ class Player:
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
+        print('\n')
+        if self.state.isWhiteTurn:
+            print("WHITE TURN")
+        if not self.state.isWhiteTurn:
+            print("BLACK TURN")        
         return nextMove
 
     # TODO: remove. Hackish way to get user input for placing phase, used in placementTest.py
@@ -60,7 +67,7 @@ class Player:
         """turns: int, total turns"""
         # check if turns is odd (black's turn)
         # check if turns > STARTING_PIECES * 2, (placing or moving stage)
-        print("####################################################################")
+        #print("####################################################################")
 
         # check if turns is even (black's turn)
         if turns % 2 != 0:
@@ -190,7 +197,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
                          not state.isWhiteTurn)
 
     # print(turnsLeft)
-    # newState.printBoard()
+    newState.printBoard()
 
     if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
         newState.shrink(1)
@@ -293,7 +300,6 @@ def minimaxPlacement(state, turnsLeft):
     #for place in getPlaces(state):
     #    choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
     x = getPlaces(state)
-    print(x)
     return random.choice(x) #max(choices)[1]
 
 def weakestQuadrant(state):
@@ -324,8 +330,7 @@ def weakestQuadrant(state):
 
 
 # Function that is meant to make good placements.
-def heurPlacement(state, turnsLeft): 
-    print("debugging message")   
+def heurPlacement(state, turnsLeft):    
     availableCells = getPlaces(state)
     # Determine weakest quadrant. 
     weakestQuad = weakestQuadrant(state)
@@ -339,7 +344,7 @@ def heurPlacement(state, turnsLeft):
     # From cells that result in kills, we choose a random cell with max kills. 
     # TODO: Implement distance to centre calculation for both kills and control style of play????
     if len(killList)>0:
-        print("KILLLLLL")
+        print("KIIIIILLLLILLLLLL")
         # Prune the current killList so it only contains entries with max killValue. 
         killList2 = []
         maxKillValue, cell = max(killList)

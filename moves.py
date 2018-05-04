@@ -155,15 +155,15 @@ class GameState:
 
     def enemyPieces(self):
         if self.isWhiteTurn:
-            return blackPieces
+            return self.blackPieces
         else:
-            return whitePieces
+            return self.whitePieces
 
     def allyPieces(self):
         if self.isWhiteTurn:
-            return whitePieces
+            return self.whitePieces
         else:
-            return blackPieces
+            return self.blackPieces
 
 
 def removeEatenPieces(state, eatWhite):

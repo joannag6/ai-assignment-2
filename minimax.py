@@ -302,24 +302,37 @@ def minimaxPlacement(state, turnsLeft):
     return random.choice(x) #max(choices)[1]
 
 def weakestQuadrant(state):
-    return
+    quadOneCount = 0
+    quadTwoCount = 0
+    quadThreeCount = 0
+    quadFourCount = 0
+    allyPieces = state.allyPieces()
+    for piece in allyPieces:
+        if piece in QUAD_ONE:
+            quadOneCount+=1
+        if piece in QUAD_TWO:
+            quadTwoCount+=1
+        if piece in QUAD_THREE:
+            quadThreeCount+=1
+        if piece in QUAD_FOUR:
+            quadFourCount+=1
+    weakestCount = min(quadOneCount,quadTwoCount,quadThreeCount,quadFourCount)
+    if quadOneCount is weakestCount:
+        return QUAD_ONE
+    if quadTwoCount is weakestCount:
+        return QUAD_TWO
+    if quadThreeCount is weakestCount:
+        return QUAD_THREE
+    if quadFourCount is weakestCount:
+        return QUAD_FOUR
 
 
 
 # Function that is meant to make good placements.
-def heurPlacement(state, turnsLeft):
-    # TODO: place this better. 
-    # if is white turn, then enemy pieces are black.
-    # if is black turn, enemy pieces are white. 
-    if state.isWhiteTurn:
-        enemyPieces = state.blackPieces
-        allyPieces = state.whitePieces
-    else:
-        enemyPieces = state.whitePieces
-        allyPieces = state.blackPieces
-    
+def heurPlacement(state, turnsLeft):    
     availableCells = getPlaces(state)
     # Determine weakest quadrant. 
+    weakestQuad = weakestQuadrant(state)
 
     # First, we prioritize kills. 
     killList = []
@@ -328,7 +341,7 @@ def heurPlacement(state, turnsLeft):
         if killValue(state,cell)>0:
             killList.append((killValue,cell))
     # From cells that result in kills, we choose a random cell with max kills. 
-    # TODO: Implement quadrant selection, then maybe distance to centre calculation. 
+    # TODO: Implement distance to centre calculation for both kills and control style of play????
     if len(killList)>0:
         # Prune the current killList so it only contains entries with max killValue. 
         killList2 = []
@@ -338,29 +351,50 @@ def heurPlacement(state, turnsLeft):
                 killList2.append(entry)
         # Prune the current killList so it only contains entries in weakest quadrant. 
         killList3 = []
-        
-        returnEntry = random.choice(killList2)
-        return returnEntry[1]
+        for entry in killList2:
+            if entry[1] in weakestQuad:
+                killList3.append(entry[1])
+        # If not possible to control maxControl number of cells by placing in weakest quadrant,
+        # then we disregard quadrant analysis and place it on random cell that returns most control. 
+        if len(killList3) == 0:
+            returnEntry =  random.choice(killList2)
+            return returnEntry[1]
+        else: 
+            return random.choice(killList3)
 
     # if we reach here, no kills possible. 
     # If we can't kill, we just play for control. 
     controlList = []
     # Construct a list for control evaluation.
     for cell in availableCells:
-        controlList.append((controlValue(state,cell,enemyPieces,allyPieces), cell))
+        controlList.append((controlValue(state,cell), cell))
     maxControlScore,maxControlCoord = max(controlList)
+    
+    # Construct a list that only holds coords with best control score at this point. 
     controlList2 = []
     for entry in controlList:
         if entry[0] is maxControlScore:
             controlList2.append(entry)
-    a,b = random.choice(controlList2)
-    print(a,b)
-    return b
+
+    # Prune controlList further to only include coords in weakest quadrant. 
+    controlList3 = []
+    for entry in controlList2:
+        if entry[1] in weakestQuad:
+            controlList3.append(entry[1])
+    # If not possible to control maxControl number of cells by placing in weakest quadrant,
+    # then we disregard quadrant analysis and place it on random cell that returns most control. 
+    if len(controlList3) == 0:
+        returnEntry =  random.choice(controlList2)
+        return returnEntry[1]
+    else: 
+        return random.choice(controlList3)
 
 # We control an adjacent cell if the next one in that direction is not enemy cell, or not out of bounds
 # That first adjacent cell has to be empty. 
 # This function calculates the number of cell that we can GAIN in control if we place a piece there. 
-def controlValue(state, coord, enemyPieces, allyPieces):
+def controlValue(state, coord):
+    enemyPieces = state.enemyPieces()
+    allyPieces = state.allyPieces()
     controlScore = 0
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
@@ -370,15 +404,8 @@ def controlValue(state, coord, enemyPieces, allyPieces):
 
 # Number of kills that can result from placing a piece on a particular cell. 
 def killValue(state, coord):
-    # TODO: place this better. 
-    # if is white turn, then enemy pieces are black.
-    # if is black turn, enemy pieces are white. 
-    if state.isWhiteTurn:
-        enemyPieces = state.blackPieces
-        allyPieces = state.whitePieces
-    else:
-        enemyPieces = state.whitePieces
-        allyPieces = state.blackPieces
+    enemyPieces = state.enemyPieces()
+    allyPieces = state.allyPieces()  
     killValue = 0
     # if adjacent coords contain enemy and one more cell in that 
     # direction contains ally piece, we can eliminate that enemy.

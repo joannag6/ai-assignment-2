@@ -7,7 +7,10 @@ LOOKAHEAD = 2
 LOOKAHEAD_MOVE = 3
 MOVEMENT_ONE = 128 + STARTING_PIECES * 2#128 + STARTING_PIECES * 2
 MOVEMENT_TWO = 64 + MOVEMENT_ONE + STARTING_PIECES * 2#64 + MOVEMENT_ONE + STARTING_PIECES * 2
-
+QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)] 
+QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
+QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
+QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
 
 class Player:
     def __init__(self, colour):
@@ -298,60 +301,76 @@ def minimaxPlacement(state, turnsLeft):
     print(x)
     return random.choice(x) #max(choices)[1]
 
+def weakestQuadrant(state):
+    return
+
+
+
 # Function that is meant to make good placements.
-# TODO, there is bug in controlList, it does not remove suboptimal coords. 
 def heurPlacement(state, turnsLeft):
+    # TODO: place this better. 
+    # if is white turn, then enemy pieces are black.
+    # if is black turn, enemy pieces are white. 
+    if state.isWhiteTurn:
+        enemyPieces = state.blackPieces
+        allyPieces = state.whitePieces
+    else:
+        enemyPieces = state.whitePieces
+        allyPieces = state.blackPieces
+    
     availableCells = getPlaces(state)
+    # Determine weakest quadrant. 
+
     # First, we prioritize kills. 
     killList = []
     # Construct a list of cells that can result in kills. 
     for cell in availableCells:
         if killValue(state,cell)>0:
             killList.append((killValue,cell))
+    # From cells that result in kills, we choose a random cell with max kills. 
+    # TODO: Implement quadrant selection, then maybe distance to centre calculation. 
     if len(killList)>0:
-        returnKillValue, returnCell = random.choice(killList)
-        return returnCell
+        # Prune the current killList so it only contains entries with max killValue. 
+        killList2 = []
+        maxKillValue, cell = max(killList)
+        for entry in killList:
+            if entry[0] == maxKillValue:
+                killList2.append(entry)
+        # Prune the current killList so it only contains entries in weakest quadrant. 
+        killList3 = []
+        
+        returnEntry = random.choice(killList2)
+        return returnEntry[1]
 
     # if we reach here, no kills possible. 
     # If we can't kill, we just play for control. 
     controlList = []
     # Construct a list for control evaluation.
-    print(availableCells) 
     for cell in availableCells:
-        controlList.append((controlValue(state,cell), cell))
-    # TODO: if there is tie, choose cells in quad of least ctrl
+        controlList.append((controlValue(state,cell,enemyPieces,allyPieces), cell))
     maxControlScore,maxControlCoord = max(controlList)
-    # i is the max control value we have in the list
-    print(maxControlScore)
-    newList = []
+    controlList2 = []
     for entry in controlList:
         if entry[0] is maxControlScore:
-            newList.append(entry)
-    a,b = random.choice(newList)
+            controlList2.append(entry)
+    a,b = random.choice(controlList2)
     print(a,b)
     return b
 
 # We control an adjacent cell if the next one in that direction is not enemy cell, or not out of bounds
 # That first adjacent cell has to be empty. 
-def controlValue(state, coord):
+# This function calculates the number of cell that we can GAIN in control if we place a piece there. 
+def controlValue(state, coord, enemyPieces, allyPieces):
     controlScore = 0
-    # if is white turn, then enemy pieces are black.
-    # if is black turn, enemy pieces are white. 
-    if state.isWhiteTurn:
-        enemyPieces = state.blackPieces
-        allyPieces = state.whitePieces
-    else:
-        enemyPieces = state.whitePieces
-        allyPieces = state.blackPieces
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
         if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty(coord1) and not state.isEnemy(enemyPieces,coord2):
             controlScore += 1
     return controlScore       
 
+# Number of kills that can result from placing a piece on a particular cell. 
 def killValue(state, coord):
-    x,y = coord
-    killValue = 0
+    # TODO: place this better. 
     # if is white turn, then enemy pieces are black.
     # if is black turn, enemy pieces are white. 
     if state.isWhiteTurn:
@@ -360,7 +379,7 @@ def killValue(state, coord):
     else:
         enemyPieces = state.whitePieces
         allyPieces = state.blackPieces
-
+    killValue = 0
     # if adjacent coords contain enemy and one more cell in that 
     # direction contains ally piece, we can eliminate that enemy.
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))

@@ -153,6 +153,18 @@ class GameState:
         """Checks a piece between side1 and side2 will be eaten."""
         return self.isEnemy(enemyPieces, side1) and self.isEnemy(enemyPieces, side2)
 
+    def enemyPieces(self):
+        if self.isWhiteTurn:
+            return blackPieces
+        else:
+            return whitePieces
+
+    def allyPieces(self):
+        if self.isWhiteTurn:
+            return whitePieces
+        else:
+            return blackPieces
+
 
 def removeEatenPieces(state, eatWhite):
     """Given both sets of coordinates, remove own eaten pieces."""

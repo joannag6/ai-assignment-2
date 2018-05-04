@@ -52,7 +52,7 @@ class Player:
 
 
         # the first STARTING_PIECES*2 turns are definitely placement turns. 
-        if turns <= STARTING_PIECES * 2:
+        if turns < STARTING_PIECES * 2:
             nextMove = heurPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
         else:
             # if (MOVEMENT_ONE - turns <= 0):

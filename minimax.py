@@ -59,13 +59,7 @@ class Player:
         """turns: int, total turns"""
         # check if turns is odd (black's turn)
         # check if turns > STARTING_PIECES * 2, (placing or moving stage)
-        nextMove = None # if passing turn
         print("####################################################################")
-
-        if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-            self.state.shrink(1)
-        if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
-            self.state.shrink(2)
 
         # check if turns is even (black's turn)
         if turns % 2 != 0:

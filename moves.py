@@ -1,4 +1,5 @@
 # Some functions from Part A, modified to fit Part B's requirements
+# Also contains newly written helper functions, related to cell operations and movement.
 START_PHASE = 0
 INITIAL_BOARD_SIZE = 8
 
@@ -54,9 +55,9 @@ class GameState:
         print("Printing board")
         board = [[ '-' for y in range(8) ] for x in range(8)]
         for i,j in self.whitePieces:
-            board[i][j] = 'O'
+            board[j][i] = 'O'
         for i,j in self.blackPieces:
-            board[i][j] = '@'
+            board[j][i] = '@'
         for row in board:
             print(row)
 
@@ -72,8 +73,9 @@ class GameState:
                 moveList.append((coord, move))
         return moveList
 
-    def isEmpty_(self, i, j):
+    def isEmpty(self, coordinate):
         """Checks if there are any pieces in the cell specified by (i, j)."""
+        i,j = coordinate
         return ((i, j) not in self.blackPieces
                 and (i, j) not in self.whitePieces
                 and not self.corner(i, j))
@@ -141,10 +143,27 @@ class GameState:
         i, j = coordinate
         return self.withinBounds(i, j) and (coordinate in enemyPieces or self.corner(i, j))
 
+    def isAlly(self, allyPieces, coordinate):
+        """Checks if coordinates belong to ally"""
+        i, j = coordinate
+        return self.withinBounds(i, j) and (coordinate in allyPieces or self.corner(i, j))
+    
 
     def canEat(self, enemyPieces, side1, side2):
         """Checks a piece between side1 and side2 will be eaten."""
         return self.isEnemy(enemyPieces, side1) and self.isEnemy(enemyPieces, side2)
+
+    def enemyPieces(self):
+        if self.isWhiteTurn:
+            return self.blackPieces
+        else:
+            return self.whitePieces
+
+    def allyPieces(self):
+        if self.isWhiteTurn:
+            return self.whitePieces
+        else:
+            return self.blackPieces
 
 
 def removeEatenPieces(state, eatWhite):
@@ -171,3 +190,56 @@ def removeEatenPieces(state, eatWhite):
     for pieceToRemove in toRemove:
         toEatPieces.remove(pieceToRemove)
     return toEatPieces
+
+# Function that determines if a cell is within range of the board. 
+def inBoardRange(coord):
+    x,y = coord
+    return x>-1 and x<8 and y >-1 and y <8
+
+# Functions that return coord of cells up down left right, 
+# does not check for board range. 
+def up(coord):
+    x,y = coord
+    return x,y-1
+def down(coord):
+    x,y = coord
+    return x, y+1
+def left(coord):
+    x,y = coord
+    return x-1, y
+def right(coord):
+    x,y = coord
+    return x+1, y
+
+# Functions that return coord of cells that are two up, down,
+# left, right. Does not check for board range. 
+def twoUp(coord):
+    x,y = coord
+    return x,y-2
+def twoDown(coord):
+    x,y = coord
+    return x, y+2
+def twoLeft(coord):
+    x,y = coord
+    return x-2, y
+def twoRight(coord):
+    x,y = coord
+    return x+2, y
+
+# Function that returns coord of adjacent cells, checks for board
+# range. 
+def adjacentCells(x,y):
+    adjacentCells = [up(x,y), down(x,y), left(x,y), right(x,y)]
+    for cell in adjacentCells:
+        if not inBoardRange(cell):
+            adjacentCells.remove(cell)
+    return adjacentCells
+
+# Function that returns coord of adjacent cells, 
+# two cells away, checks for board range. 
+def twoAdjacentCells(x,y):
+    adjacentAdjacentCells = [twoUp(x,y), twoDown(x,y), twoLeft(x,y), twoRight(x,y)]
+    for cell in adjacentCells:
+        if not inBoardRange(cell):
+            adjacentCells.remove(cell)
+    return adjacentAdjacentCells

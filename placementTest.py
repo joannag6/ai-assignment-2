@@ -8,12 +8,8 @@ LOOKAHEAD_MOVE = 3
 MOVEMENT_ONE = 128 + STARTING_PIECES * 2#128 + STARTING_PIECES * 2
 MOVEMENT_TWO = 64 + MOVEMENT_ONE + STARTING_PIECES * 2#64 + MOVEMENT_ONE + STARTING_PIECES * 2
 
-CENTRE = [(3,3),(3,4),(4,3),(4,4)]
-
 # Python code to simulate placement phase. 
 # User has to input move. 
-# AI currently just does random safe moves. 
-# Function that just makes valid placements.
 
 
 

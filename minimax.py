@@ -48,7 +48,8 @@ class Player:
 
         self.update(nextMove)
 
-        self.state.printBoard()
+        # TODO: printing, uncomment when not running form referee.py
+        #self.state.printBoard()
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
@@ -142,7 +143,7 @@ def getMoves(state):
 def getPlaces(state):
     placeList = []
 
-    if state.isWhiteTurn:
+    if not state.isWhiteTurn:
         start, end = 0, state.size - PLACEMENT_LINE
     else:
         start, end = PLACEMENT_LINE, state.size
@@ -323,7 +324,8 @@ def weakestQuadrant(state):
 
 
 # Function that is meant to make good placements.
-def heurPlacement(state, turnsLeft):    
+def heurPlacement(state, turnsLeft): 
+    print("debugging message")   
     availableCells = getPlaces(state)
     # Determine weakest quadrant. 
     weakestQuad = weakestQuadrant(state)
@@ -337,14 +339,17 @@ def heurPlacement(state, turnsLeft):
     # From cells that result in kills, we choose a random cell with max kills. 
     # TODO: Implement distance to centre calculation for both kills and control style of play????
     if len(killList)>0:
+        print("KILLLLLL")
         # Prune the current killList so it only contains entries with max killValue. 
         killList2 = []
         maxKillValue, cell = max(killList)
         for entry in killList:
             if entry[0] == maxKillValue:
                 killList2.append(entry)
+        returnEntry = random.choice(killList2)
+        return returnEntry[1]
         # Prune the current killList so it only contains entries in weakest quadrant. 
-        killList3 = []
+        """killList3 = []
         for entry in killList2:
             if entry[1] in weakestQuad:
                 killList3.append(entry[1])
@@ -354,7 +359,7 @@ def heurPlacement(state, turnsLeft):
             returnEntry =  random.choice(killList2)
             return returnEntry[1]
         else: 
-            return random.choice(killList3)
+            return random.choice(killList3)"""
 
     # if we reach here, no kills possible. 
     # If we can't kill, we just play for control. 

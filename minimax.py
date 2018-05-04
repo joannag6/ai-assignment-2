@@ -11,7 +11,9 @@ QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2
 QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
 QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
 QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
-runningReferee = True
+CORNERS = [(0,0),(7,0),(0,7),(7,7)]
+
+runningReferee = False
 class Player:
     def __init__(self, colour):
         self.colour = colour
@@ -19,8 +21,8 @@ class Player:
         self.state = GameState(INITIAL_BOARD_SIZE, set(), set(), isWhite, isWhite)
         self.turns = 0
 
-    def action(self):
-        self.turns += 1
+    def action(self, turns):
+        self.turns = turns + 1
         turns = self.turns 
         # if odd turns, it is white's turn. 
         if turns % 2 != 0:
@@ -70,31 +72,6 @@ class Player:
       
         return nextMove
 
-    # TODO: remove. Hackish way to get user input for placing phase, used in placementTest.py
-    def userAction(self, turns):
-        """turns: int, total turns"""
-        # check if turns is odd (black's turn)
-        # check if turns > STARTING_PIECES * 2, (placing or moving stage)
-        #print("####################################################################")
-
-        # check if turns is even (black's turn)
-        if turns % 2 != 0:
-            self.state.isWhiteTurn = True
-        else:
-            self.state.isWhiteTurn = False
-
-        # Collects user input and uses that for nextMove. 
-        x = int(input("Enter a first digit of coord: "))
-        y = int(input("Enter a second digit of coord: "))
-        nextMove = (x,y)
-        self.update(nextMove)
-
-        self.state.printBoard()
-
-        # return (x, y) for placing piece
-        # return ((oldx, oldy), (newx, newy)) for moving piece
-        return nextMove
-
     def updatePlacement(self, place):
         if self.state.isWhiteTurn:
             self.state.whitePieces.add(place)
@@ -127,6 +104,7 @@ class Player:
         
 
     def update(self, action):
+        self.turns += 1 
         """Update internal game state according to opponent's action"""
 
         if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
@@ -151,8 +129,55 @@ class Player:
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
+    
+    # hacky way to get a user to play as a player, see placementTest.py for more info. 
+    def userAction(self, turns):
+        self.turns = turns + 1
+        turns = self.turns 
+        # if odd turns, it is white's turn. 
+        if turns % 2 != 0:
+            self.state.isWhiteTurn = True
+        # if even turns, it is black's turn. 
+        else:
+            self.state.isWhiteTurn = False   
 
+        print('\n\n\n')
+        if self.state.isWhiteTurn:
+            print("WHITE TURN")
+        if not self.state.isWhiteTurn:
+            print("BLACK TURN") 
+
+        """turns: int, total turns"""
+        # check if turns is odd (black's turn)
+        # check if turns > STARTING_PIECES * 2, (placing or moving stage)
+        nextMove = None # if passing turn
+        #print("####################################################################")
+        #self.turns += 1
+        
+        # Code that implements shrinking. 
+        if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+            self.state.shrink(1)
+        if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+            self.state.shrink(2)
+
+
+        x = input("input first digit of coord")
+        y = input("input second digit of coord")
+        x = int(x)
+        y = int(y)
+        nextMove = (x,y)
+        self.selfUpdate(nextMove)
+
+        # TODO: prints board when not running from referee. 
+        if not runningReferee:
+            self.state.printBoard()
+
+        # return (x, y) for placing piece
+        # return ((oldx, oldy), (newx, newy)) for moving piece
+      
+        return nextMove
         # TODO: Add check for endstate, and do something
+
 
 
 def getMoves(state):
@@ -173,17 +198,25 @@ def getMoves(state):
 
 def getPlaces(state):
     placeList = []
+    # If it is white's turn, it means we can only put in white's starting zone. 
+    # Create a set of all the coordinates minus the bottom two rows, then exclude
+    # the ones already with pieces and corners. 
+    placeList = []
+    if state.isWhiteTurn:
+        for x in range(8):
+            for y in range(6):
+                coord = (x,y)
+                if (coord not in state.whitePieces and coord not in state.blackPieces
+                        and coord not in CORNERS):
+                    placeList.append(coord)
 
-    if not state.isWhiteTurn:
-        start, end = 0, state.size - PLACEMENT_LINE
     else:
-        start, end = PLACEMENT_LINE, state.size
-
-    for coord in [(x, y) for y in range(start, end) for x in range(state.size)]:
-        if (coord not in state.whitePieces and
-                coord not in state.blackPieces and
-                not state.corner(coord[0], coord[1])):
-            placeList.append(coord)
+        for x in range(8):
+            for y in range(2,8):
+                coord = (x,y)
+                if (coord not in state.whitePieces and coord not in state.blackPieces
+                        and coord not in CORNERS):
+                    placeList.append(coord)
     return placeList
 
 
@@ -319,7 +352,7 @@ def getPlaceValue(place, ownTurn, state, turnsLeft):
 
 
 # Function that just makes valid placements. 
-def minimaxPlacement(state, turnsLeft):
+def noobPlacement(state, turnsLeft):
     choices = []
     #for place in getPlaces(state):
     #    choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
@@ -421,8 +454,8 @@ def heurPlacement(state, turnsLeft):
 # That first adjacent cell has to be empty. 
 # This function calculates the number of cell that we can GAIN in control if we place a piece there. 
 def controlValue(state, coord):
-    enemyPieces = state.allyPieces()
-    allyPieces = state.enemyPieces()
+    enemyPieces = state.enemyPieces()
+    allyPieces = state.allyPieces()
     controlScore = 0
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
@@ -432,8 +465,8 @@ def controlValue(state, coord):
 
 # Number of kills that can result from placing a piece on a particular cell. 
 def killValue(state, coord):
-    enemyPieces = state.allyPieces()
-    allyPieces = state.enemyPieces()  
+    enemyPieces = state.enemyPieces()
+    allyPieces = state.allyPieces()  
     killValue = 0
     # if adjacent coords contain enemy and one more cell in that 
     # direction contains ally piece, we can eliminate that enemy.

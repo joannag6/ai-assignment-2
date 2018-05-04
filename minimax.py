@@ -188,7 +188,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
         # print(newState.blackPieces)
         if (getMoves(newState) == []):
             # print("no new moves?")
-        return getEvaluationValue(newState) # TODO or None?
+            return getEvaluationValue(newState) # TODO or None?
 
     if ownTurn:
         return max(choices)

@@ -13,7 +13,7 @@ QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),
 QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
 CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 
-runningReferee = False
+runningReferee = True # TODO remove before submission
 class Player:
     def __init__(self, colour):
         self.colour = colour
@@ -409,9 +409,8 @@ def heurPlacement(state, turnsLeft):
             if entry[0] == maxKillValue:
                 killList2.append(entry)
         returnEntry = random.choice(killList2)
-        return returnEntry[1]
         # Prune the current killList so it only contains entries in weakest quadrant. 
-        """killList3 = []
+        killList3 = []
         for entry in killList2:
             if entry[1] in weakestQuad:
                 killList3.append(entry[1])
@@ -421,7 +420,7 @@ def heurPlacement(state, turnsLeft):
             returnEntry =  random.choice(killList2)
             return returnEntry[1]
         else: 
-            return random.choice(killList3)"""
+            return random.choice(killList3)
 
     # if we reach here, no kills possible. 
     # If we can't kill, we just play for control. 

@@ -26,33 +26,10 @@ def main():
         blackPlayer.update(nextMove)
         print("####################################################################")
 
-
-        if turns > STARTING_PIECES * 2 and whitePlayer.state.isEndState():
-            if len(whitePlayer.state.whitePieces) > len(whitePlayer.state.blackPieces):
-                print("White player wins!")
-                break
-            if len(whitePlayer.state.whitePieces) < len(whitePlayer.state.blackPieces):
-                print("Black player wins!")
-                break
-            else:
-                print("It's a draw!!")
-                break
-
-
         nextMove = blackPlayer.userAction(turns+1)
         print("black: " + str(nextMove))
         whitePlayer.update(nextMove)
         print("####################################################################")
-
-        if turns > STARTING_PIECES * 2 and blackPlayer.state.isEndState():
-            if len(whitePlayer.state.whitePieces) > len(whitePlayer.state.blackPieces):
-                print("White player wins!")
-                break
-            if len(whitePlayer.state.whitePieces) < len(whitePlayer.state.blackPieces):
-                print("Black player wins!")
-                break
-            else:
-                print("It's a draw!!")
-                break
+        
 if __name__ == "__main__":
     main()

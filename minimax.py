@@ -11,7 +11,7 @@ QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2
 QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
 QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
 QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
-
+runningReferee = True
 class Player:
     def __init__(self, colour):
         self.colour = colour
@@ -19,26 +19,37 @@ class Player:
         self.state = GameState(INITIAL_BOARD_SIZE, set(), set(), isWhite, isWhite)
         self.turns = 0
 
-    def action(self, turns):
+    def action(self):
+        self.turns += 1
+        turns = self.turns 
+        # if odd turns, it is white's turn. 
+        if turns % 2 != 0:
+            self.state.isWhiteTurn = True
+        # if even turns, it is black's turn. 
+        else:
+            self.state.isWhiteTurn = False   
+
+        print('\n\n\n')
+        if self.state.isWhiteTurn:
+            print("WHITE TURN")
+        if not self.state.isWhiteTurn:
+            print("BLACK TURN") 
+
         """turns: int, total turns"""
         # check if turns is odd (black's turn)
         # check if turns > STARTING_PIECES * 2, (placing or moving stage)
         nextMove = None # if passing turn
         #print("####################################################################")
         #self.turns += 1
-   
-
+        
+        # Code that implements shrinking. 
         if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
             self.state.shrink(1)
         if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
             self.state.shrink(2)
 
-        # check if turns is even (black's turn)
-        if turns % 2 != 0:
-            self.state.isWhiteTurn = True
-        else:
-            self.state.isWhiteTurn = False
 
+        # the first STARTING_PIECES*2 turns are definitely placement turns. 
         if turns <= STARTING_PIECES * 2:
             nextMove = heurPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
         else:
@@ -48,18 +59,15 @@ class Player:
             #     turnsLeft = MOVEMENT_ONE - turns
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
 
-        self.update(nextMove)
+        self.selfUpdate(nextMove)
 
-        # TODO: printing, uncomment when not running form referee.py
-        #self.state.printBoard()
+        # TODO: prints board when not running from referee. 
+        if not runningReferee:
+            self.state.printBoard()
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
-        print('\n')
-        if self.state.isWhiteTurn:
-            print("WHITE TURN")
-        if not self.state.isWhiteTurn:
-            print("BLACK TURN")        
+      
         return nextMove
 
     # TODO: remove. Hackish way to get user input for placing phase, used in placementTest.py
@@ -101,9 +109,25 @@ class Player:
             self.state.blackPieces.remove(move[0])
             self.state.blackPieces.add(move[1])
 
+    # Function that is called only by player, to update it's own state
+    # after a move has been made. 
+    def selfUpdate(self, action):
+        """Update internal game state according to own action"""
+        if action == None: returns
+
+        if self.turns <= STARTING_PIECES * 2:
+            # update placement
+            self.updatePlacement(action)
+        else:
+            # update movement
+            self.updateMovement(action)
+
+        removeEatenPieces(self.state, not self.state.isWhiteTurn)
+        removeEatenPieces(self.state, self.state.isWhiteTurn)
+        
+
     def update(self, action):
         """Update internal game state according to opponent's action"""
-        self.turns += 1
 
         if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
             self.state.shrink(1)
@@ -280,7 +304,7 @@ def getPlaceValue(place, ownTurn, state, turnsLeft):
     removeEatenPieces(newState, not newState.isWhiteTurn)
     removeEatenPieces(newState, newState.isWhiteTurn)
 
-    # newState.printBoard()
+    #newState.printBoard()
 
     if turnsLeft == 0 or newState.isEndState():
         return getEvaluationValue(newState)
@@ -397,8 +421,8 @@ def heurPlacement(state, turnsLeft):
 # That first adjacent cell has to be empty. 
 # This function calculates the number of cell that we can GAIN in control if we place a piece there. 
 def controlValue(state, coord):
-    enemyPieces = state.enemyPieces()
-    allyPieces = state.allyPieces()
+    enemyPieces = state.allyPieces()
+    allyPieces = state.enemyPieces()
     controlScore = 0
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
@@ -408,8 +432,8 @@ def controlValue(state, coord):
 
 # Number of kills that can result from placing a piece on a particular cell. 
 def killValue(state, coord):
-    enemyPieces = state.enemyPieces()
-    allyPieces = state.allyPieces()  
+    enemyPieces = state.allyPieces()
+    allyPieces = state.enemyPieces()  
     killValue = 0
     # if adjacent coords contain enemy and one more cell in that 
     # direction contains ally piece, we can eliminate that enemy.

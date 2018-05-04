@@ -11,7 +11,9 @@ QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2
 QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
 QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
 QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
+CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 
+runningReferee = True # TODO remove before submission
 class Player:
     def __init__(self, colour):
         self.colour = colour
@@ -20,23 +22,36 @@ class Player:
         self.turns = 0
 
     def action(self, turns):
+        self.turns = turns + 1
+        turns = self.turns 
+        # if odd turns, it is white's turn. 
+        if turns % 2 != 0:
+            self.state.isWhiteTurn = True
+        # if even turns, it is black's turn. 
+        else:
+            self.state.isWhiteTurn = False   
+
+        print('\n\n\n')
+        if self.state.isWhiteTurn:
+            print("WHITE TURN")
+        if not self.state.isWhiteTurn:
+            print("BLACK TURN") 
+
         """turns: int, total turns"""
         # check if turns is odd (black's turn)
         # check if turns > STARTING_PIECES * 2, (placing or moving stage)
         nextMove = None # if passing turn
-        print("####################################################################")
-
+        #print("####################################################################")
+        #self.turns += 1
+        
+        # Code that implements shrinking. 
         if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
             self.state.shrink(1)
         if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
             self.state.shrink(2)
 
-        # check if turns is even (black's turn)
-        if turns % 2 != 0:
-            self.state.isWhiteTurn = True
-        else:
-            self.state.isWhiteTurn = False
 
+        # the first STARTING_PIECES*2 turns are definitely placement turns. 
         if turns <= STARTING_PIECES * 2:
             nextMove = heurPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
         else:
@@ -46,43 +61,15 @@ class Player:
             #     turnsLeft = MOVEMENT_ONE - turns
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
 
-        self.update(nextMove)
+        self.selfUpdate(nextMove)
 
-        self.state.printBoard()
-
-        # return (x, y) for placing piece
-        # return ((oldx, oldy), (newx, newy)) for moving piece
-        return nextMove
-
-    # TODO: remove. Hackish way to get user input for placing phase, used in placementTest.py
-    def userAction(self, turns):
-        """turns: int, total turns"""
-        # check if turns is odd (black's turn)
-        # check if turns > STARTING_PIECES * 2, (placing or moving stage)
-        nextMove = None # if passing turn
-        print("####################################################################")
-
-        if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-            self.state.shrink(1)
-        if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
-            self.state.shrink(2)
-
-        # check if turns is even (black's turn)
-        if turns % 2 != 0:
-            self.state.isWhiteTurn = True
-        else:
-            self.state.isWhiteTurn = False
-
-        # Collects user input and uses that for nextMove. 
-        x = int(input("Enter a first digit of coord: "))
-        y = int(input("Enter a second digit of coord: "))
-        nextMove = (x,y)
-        self.update(nextMove)
-
-        self.state.printBoard()
+        # TODO: prints board when not running from referee. 
+        if not runningReferee:
+            self.state.printBoard()
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
+      
         return nextMove
 
     def updatePlacement(self, place):
@@ -99,9 +86,26 @@ class Player:
             self.state.blackPieces.remove(move[0])
             self.state.blackPieces.add(move[1])
 
+    # Function that is called only by player, to update it's own state
+    # after a move has been made. 
+    def selfUpdate(self, action):
+        """Update internal game state according to own action"""
+        if action == None: returns
+
+        if self.turns <= STARTING_PIECES * 2:
+            # update placement
+            self.updatePlacement(action)
+        else:
+            # update movement
+            self.updateMovement(action)
+
+        removeEatenPieces(self.state, not self.state.isWhiteTurn)
+        removeEatenPieces(self.state, self.state.isWhiteTurn)
+        
+
     def update(self, action):
+        self.turns += 1 
         """Update internal game state according to opponent's action"""
-        self.turns += 1
 
         if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
             self.state.shrink(1)
@@ -125,8 +129,55 @@ class Player:
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
+    
+    # hacky way to get a user to play as a player, see placementTest.py for more info. 
+    def userAction(self, turns):
+        self.turns = turns + 1
+        turns = self.turns 
+        # if odd turns, it is white's turn. 
+        if turns % 2 != 0:
+            self.state.isWhiteTurn = True
+        # if even turns, it is black's turn. 
+        else:
+            self.state.isWhiteTurn = False   
 
+        print('\n\n\n')
+        if self.state.isWhiteTurn:
+            print("WHITE TURN")
+        if not self.state.isWhiteTurn:
+            print("BLACK TURN") 
+
+        """turns: int, total turns"""
+        # check if turns is odd (black's turn)
+        # check if turns > STARTING_PIECES * 2, (placing or moving stage)
+        nextMove = None # if passing turn
+        #print("####################################################################")
+        #self.turns += 1
+        
+        # Code that implements shrinking. 
+        if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+            self.state.shrink(1)
+        if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+            self.state.shrink(2)
+
+
+        x = input("input first digit of coord")
+        y = input("input second digit of coord")
+        x = int(x)
+        y = int(y)
+        nextMove = (x,y)
+        self.selfUpdate(nextMove)
+
+        # TODO: prints board when not running from referee. 
+        if not runningReferee:
+            self.state.printBoard()
+
+        # return (x, y) for placing piece
+        # return ((oldx, oldy), (newx, newy)) for moving piece
+      
+        return nextMove
         # TODO: Add check for endstate, and do something
+
 
 
 def getMoves(state):
@@ -147,17 +198,25 @@ def getMoves(state):
 
 def getPlaces(state):
     placeList = []
-
+    # If it is white's turn, it means we can only put in white's starting zone. 
+    # Create a set of all the coordinates minus the bottom two rows, then exclude
+    # the ones already with pieces and corners. 
+    placeList = []
     if state.isWhiteTurn:
-        start, end = 0, state.size - PLACEMENT_LINE
-    else:
-        start, end = PLACEMENT_LINE, state.size
+        for x in range(8):
+            for y in range(6):
+                coord = (x,y)
+                if (coord not in state.whitePieces and coord not in state.blackPieces
+                        and coord not in CORNERS):
+                    placeList.append(coord)
 
-    for coord in [(x, y) for y in range(start, end) for x in range(state.size)]:
-        if (coord not in state.whitePieces and
-                coord not in state.blackPieces and
-                not state.corner(coord[0], coord[1])):
-            placeList.append(coord)
+    else:
+        for x in range(8):
+            for y in range(2,8):
+                coord = (x,y)
+                if (coord not in state.whitePieces and coord not in state.blackPieces
+                        and coord not in CORNERS):
+                    placeList.append(coord)
     return placeList
 
 
@@ -195,7 +254,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
                          not state.isWhiteTurn)
 
     # print(turnsLeft)
-    # newState.printBoard()
+    newState.printBoard()
 
     if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
         newState.shrink(1)
@@ -278,7 +337,7 @@ def getPlaceValue(place, ownTurn, state, turnsLeft):
     removeEatenPieces(newState, not newState.isWhiteTurn)
     removeEatenPieces(newState, newState.isWhiteTurn)
 
-    # newState.printBoard()
+    #newState.printBoard()
 
     if turnsLeft == 0 or newState.isEndState():
         return getEvaluationValue(newState)
@@ -293,12 +352,11 @@ def getPlaceValue(place, ownTurn, state, turnsLeft):
 
 
 # Function that just makes valid placements. 
-def minimaxPlacement(state, turnsLeft):
+def noobPlacement(state, turnsLeft):
     choices = []
     #for place in getPlaces(state):
     #    choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
     x = getPlaces(state)
-    print(x)
     return random.choice(x) #max(choices)[1]
 
 def weakestQuadrant(state):
@@ -343,12 +401,14 @@ def heurPlacement(state, turnsLeft):
     # From cells that result in kills, we choose a random cell with max kills. 
     # TODO: Implement distance to centre calculation for both kills and control style of play????
     if len(killList)>0:
+        print("KIIIIILLLLILLLLLL")
         # Prune the current killList so it only contains entries with max killValue. 
         killList2 = []
         maxKillValue, cell = max(killList)
         for entry in killList:
             if entry[0] == maxKillValue:
                 killList2.append(entry)
+        returnEntry = random.choice(killList2)
         # Prune the current killList so it only contains entries in weakest quadrant. 
         killList3 = []
         for entry in killList2:

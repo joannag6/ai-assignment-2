@@ -20,18 +20,16 @@ class Player:
         isWhite = True if self.colour == "white" else False
         self.state = GameState(INITIAL_BOARD_SIZE, set(), set(), isWhite, isWhite)
         self.turns = 0
+        self.movementPhase = True
 
     def action(self, turns):
-        self.turns = turns + 1
-        turns = self.turns 
-        # if odd turns, it is white's turn. 
-        if turns % 2 != 0:
+        self.turns = turns
+        
+        # if even number of turns have passed, it is white's turn to play
+        if turns % 2 == 0:
             self.state.isWhiteTurn = True
-        # if even turns, it is black's turn. 
         else:
             self.state.isWhiteTurn = False   
-
-        print('\n\n\n')
         if self.state.isWhiteTurn:
             print("WHITE TURN")
         if not self.state.isWhiteTurn:
@@ -52,7 +50,7 @@ class Player:
 
 
         # the first STARTING_PIECES*2 turns are definitely placement turns. 
-        if turns < STARTING_PIECES * 2:
+        if self.movementPhase:
             nextMove = heurPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
         else:
             # if (MOVEMENT_ONE - turns <= 0):
@@ -69,6 +67,8 @@ class Player:
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
+        if turns == 23:
+            self.movementPhase = False
       
         return nextMove
 
@@ -92,7 +92,7 @@ class Player:
         """Update internal game state according to own action"""
         if action == None: returns
 
-        if self.turns <= STARTING_PIECES * 2:
+        if self.turns < STARTING_PIECES * 2:
             # update placement
             self.updatePlacement(action)
         else:
@@ -104,7 +104,8 @@ class Player:
         
 
     def update(self, action):
-        self.turns += 1 
+
+        self.turns += 1
         """Update internal game state according to opponent's action"""
 
         if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
@@ -115,7 +116,7 @@ class Player:
         if action == None: return
 
         # check if turns is odd (black's turn)
-        if self.turns % 2 != 0:
+        if self.turns % 2 == 0:
             self.state.isWhiteTurn = True
         else:
             self.state.isWhiteTurn = False
@@ -129,6 +130,8 @@ class Player:
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
+        if self.turns == 23:
+            self.movementPhase = False
     
     # hacky way to get a user to play as a player, see placementTest.py for more info. 
     def userAction(self, turns):
@@ -141,7 +144,6 @@ class Player:
         else:
             self.state.isWhiteTurn = False   
 
-        print('\n\n\n')
         if self.state.isWhiteTurn:
             print("WHITE TURN")
         if not self.state.isWhiteTurn:
@@ -254,7 +256,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
                          not state.isWhiteTurn)
 
     # print(turnsLeft)
-    newState.printBoard()
+ 
 
     if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
         newState.shrink(1)
@@ -475,47 +477,3 @@ def killValue(state, coord):
             killValue+=1
     return killValue
 
-
-def main():
-    #movementService = Movement(GameState(INITIAL_BOARD_SIZE, set(), set(), True, True))
-    whitePlayer = Player("white")
-    blackPlayer = Player("black")
-
-
-    for turns in range(1, MOVEMENT_TWO+2, 2):
-        nextMove = whitePlayer.action(turns)
-        print("white: " + str(nextMove))
-        blackPlayer.update(nextMove)
-        print("####################################################################")
-
-
-        if turns > STARTING_PIECES * 2 and whitePlayer.state.isEndState():
-            if len(whitePlayer.state.whitePieces) > len(whitePlayer.state.blackPieces):
-                print("White player wins!")
-                break
-            if len(whitePlayer.state.whitePieces) < len(whitePlayer.state.blackPieces):
-                print("Black player wins!")
-                break
-            else:
-                print("It's a draw!!")
-                break
-
-        nextMove = blackPlayer.action(turns+1)
-        print("black: " + str(nextMove))
-        whitePlayer.update(nextMove)
-        print("####################################################################")
-
-        if turns > STARTING_PIECES * 2 and blackPlayer.state.isEndState():
-            if len(whitePlayer.state.whitePieces) > len(whitePlayer.state.blackPieces):
-                print("White player wins!")
-                break
-            if len(whitePlayer.state.whitePieces) < len(whitePlayer.state.blackPieces):
-                print("Black player wins!")
-                break
-            else:
-                print("It's a draw!!")
-                break
-
-
-if __name__ == "__main__":
-    main()

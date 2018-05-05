@@ -14,25 +14,23 @@ QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),
 QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
 CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 
-runningReferee = True
+runningReferee = True # TODO remove before submission
 class Player:
     def __init__(self, colour):
         self.colour = colour
         isWhite = True if self.colour == "white" else False
         self.state = GameState(INITIAL_BOARD_SIZE, set(), set(), isWhite, isWhite)
         self.turns = 0
+        self.movementPhase = True
 
     def action(self, turns):
-        self.turns = turns + 1
-        turns = self.turns 
-        # if odd turns, it is white's turn. 
-        if turns % 2 != 0:
+        self.turns = turns
+        
+        # if even number of turns have passed, it is white's turn to play
+        if turns % 2 == 0:
             self.state.isWhiteTurn = True
-        # if even turns, it is black's turn. 
         else:
             self.state.isWhiteTurn = False   
-
-        print('\n\n\n')
         if self.state.isWhiteTurn:
             print("WHITE TURN")
         if not self.state.isWhiteTurn:
@@ -53,7 +51,7 @@ class Player:
 
 
         # the first STARTING_PIECES*2 turns are definitely placement turns. 
-        if turns < STARTING_PIECES * 2:
+        if self.movementPhase:
             nextMove = noobPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
         else:
             # if (MOVEMENT_ONE - turns <= 0):
@@ -70,6 +68,8 @@ class Player:
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
+        if turns == 23:
+            self.movementPhase = False
       
         return nextMove
 
@@ -84,7 +84,7 @@ class Player:
             self.state.whitePieces.remove(move[0])
             self.state.whitePieces.add(move[1])
         else:
-            self.state.blackPieces.remove(move[0])
+            self.state. blackPieces.remove(move[0])
             self.state.blackPieces.add(move[1])
 
     # Function that is called only by player, to update it's own state
@@ -93,7 +93,7 @@ class Player:
         """Update internal game state according to own action"""
         if action == None: returns
 
-        if self.turns <= STARTING_PIECES * 2:
+        if self.turns < STARTING_PIECES * 2:
             # update placement
             self.updatePlacement(action)
         else:
@@ -105,7 +105,7 @@ class Player:
         
 
     def update(self, action):
-        self.turns += 1 
+        self.turns += 1
         """Update internal game state according to opponent's action"""
 
         if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
@@ -116,7 +116,7 @@ class Player:
         if action == None: return
 
         # check if turns is odd (black's turn)
-        if self.turns % 2 != 0:
+        if self.turns % 2 == 0:
             self.state.isWhiteTurn = True
         else:
             self.state.isWhiteTurn = False
@@ -130,6 +130,8 @@ class Player:
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
+        if self.turns == 23:
+            self.movementPhase = False
     
     # hacky way to get a user to play as a player, see placementTest.py for more info. 
     def userAction(self, turns):
@@ -142,7 +144,6 @@ class Player:
         else:
             self.state.isWhiteTurn = False   
 
-        print('\n\n\n')
         if self.state.isWhiteTurn:
             print("WHITE TURN")
         if not self.state.isWhiteTurn:
@@ -178,3 +179,4 @@ class Player:
       
         return nextMove
         # TODO: Add check for endstate, and do something
+

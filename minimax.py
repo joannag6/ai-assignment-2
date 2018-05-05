@@ -34,11 +34,7 @@ class Player:
             print("BLACK TURN") 
 
         """turns: int, total turns"""
-        # check if turns is odd (black's turn)
-        # check if turns > STARTING_PIECES * 2, (placing or moving stage)
         nextMove = None # if passing turn
-        #print("####################################################################")
-        #self.turns += 1
         
         # Code that implements shrinking. 
         if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
@@ -49,6 +45,7 @@ class Player:
         if self.turns < STARTING_PIECES*2:
             nextMove = heurPlacement(self.state)
         else:
+            print("debugggingg")
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
         self.turns += 1
         self.selfUpdate(nextMove)

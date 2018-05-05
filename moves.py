@@ -161,13 +161,13 @@ class GameState:
         return self.isEnemy(enemyPieces, side1) and self.isEnemy(enemyPieces, side2)
 
     def enemyPieces(self):
-        if self.isWhiteTurn:
+        if self.isWhitePlayer:
             return self.blackPieces
         else:
             return self.whitePieces
 
     def allyPieces(self):
-        if self.isWhiteTurn:
+        if self.isWhitePlayer:
             return self.whitePieces
         else:
             return self.blackPieces

@@ -22,16 +22,15 @@ class Player:
         self.turns = 0
 
     def action(self, turns):
-        self.turns = turns + 1
-        turns = self.turns 
-        # if odd turns, it is white's turn. 
-        if turns % 2 != 0:
+        print("number of turns that has passed, and is being given to player.action() is: ")
+        print(turns)
+        self.turns = turns
+        
+        # if even number of turns have passed, it is white's turn to play
+        if turns % 2 == 0:
             self.state.isWhiteTurn = True
-        # if even turns, it is black's turn. 
         else:
             self.state.isWhiteTurn = False   
-
-        print('\n\n\n')
         if self.state.isWhiteTurn:
             print("WHITE TURN")
         if not self.state.isWhiteTurn:
@@ -92,7 +91,7 @@ class Player:
         """Update internal game state according to own action"""
         if action == None: returns
 
-        if self.turns <= STARTING_PIECES * 2:
+        if self.turns < STARTING_PIECES * 2:
             # update placement
             self.updatePlacement(action)
         else:
@@ -104,7 +103,6 @@ class Player:
         
 
     def update(self, action):
-        self.turns += 1 
         """Update internal game state according to opponent's action"""
 
         if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
@@ -141,7 +139,6 @@ class Player:
         else:
             self.state.isWhiteTurn = False   
 
-        print('\n\n\n')
         if self.state.isWhiteTurn:
             print("WHITE TURN")
         if not self.state.isWhiteTurn:

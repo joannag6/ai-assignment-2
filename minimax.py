@@ -3,8 +3,8 @@ from moves import *
 
 PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD = 2
-LOOKAHEAD_MOVE = 3
+LOOKAHEAD = 1
+LOOKAHEAD_MOVE = 2
 MOVEMENT_ONE = 128 + STARTING_PIECES * 2#128 + STARTING_PIECES * 2
 MOVEMENT_TWO = 64 + MOVEMENT_ONE + STARTING_PIECES * 2#64 + MOVEMENT_ONE + STARTING_PIECES * 2
 QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)] 
@@ -51,7 +51,7 @@ class Player:
 
         # the first STARTING_PIECES*2 turns are definitely placement turns. 
         if self.movementPhase:
-            nextMove = heurPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
+            nextMove = heurPlacement(self.state)
         else:
             # if (MOVEMENT_ONE - turns <= 0):
             #     turnsLeft = MOVEMENT_TWO - turns
@@ -60,10 +60,6 @@ class Player:
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
 
         self.selfUpdate(nextMove)
-
-        # TODO: prints board when not running from referee. 
-        if not runningReferee:
-            self.state.printBoard()
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
@@ -389,7 +385,7 @@ def weakestQuadrant(state):
 
 
 # Function that is meant to make good placements.
-def heurPlacement(state, turnsLeft):    
+def heurPlacement(state):    
     availableCells = getPlaces(state)
     # Determine weakest quadrant. 
     weakestQuad = weakestQuadrant(state)
@@ -476,4 +472,3 @@ def killValue(state, coord):
         if inBoardRange(coord1) and inBoardRange(coord2) and state.isEnemy(enemyPieces, coord1) and state.isAlly(allyPieces, coord2):
             killValue+=1
     return killValue
-

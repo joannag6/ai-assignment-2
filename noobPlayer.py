@@ -179,4 +179,3 @@ class Player:
       
         return nextMove
         # TODO: Add check for endstate, and do something
-

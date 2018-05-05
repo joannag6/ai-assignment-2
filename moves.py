@@ -140,6 +140,12 @@ class GameState:
 
     def withinBounds(self, i, j):
         """Checks if coordinates given is on the board."""
+        # TODO: find a better way to do this. 
+        cells = []
+        for x in range(8):
+        	for y in range(8): 
+        		cells.append((x,y))
+        return (i,j) in cells and not self.corner(i,j)
         return ((self.phase <= i < (self.size+self.phase)) and
                 (self.phase <= j < (self.size+self.phase)) and
                 not self.corner(i, j))

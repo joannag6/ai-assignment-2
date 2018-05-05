@@ -93,7 +93,7 @@ class Player:
         """Update internal game state according to own action"""
         if action == None: returns
 
-        if self.turns <= STARTING_PIECES * 2:
+        if self.turns < STARTING_PIECES * 2:
             # update placement
             self.updatePlacement(action)
         else:

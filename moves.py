@@ -73,13 +73,20 @@ class GameState:
                 moveList.append((coord, move))
         return moveList
 
+    def isEmpty_(self, i,j):
+        """Checks if there are any pieces in the cell specified by (i, j)."""
+        
+        return ((i, j) not in self.blackPieces
+                and (i, j) not in self.whitePieces
+                and not self.corner(i, j))
+
     def isEmpty(self, coordinate):
         """Checks if there are any pieces in the cell specified by (i, j)."""
         i,j = coordinate
         return ((i, j) not in self.blackPieces
                 and (i, j) not in self.whitePieces
-                and not self.corner(i, j))
-
+                and not self.corner(i, j))  
+    
     def canJumpRight_(self, i, j):
         """Checks if piece can jump right"""
         if self.withinBounds(i+2, j) and self.isEmpty_(i+2, j):

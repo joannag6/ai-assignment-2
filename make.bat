@@ -1,1 +1,1 @@
-python placementTest.py
+python referee.py noobPlayer minimax

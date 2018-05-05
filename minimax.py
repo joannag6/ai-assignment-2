@@ -3,8 +3,8 @@ from moves import *
 
 PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD = 1
-LOOKAHEAD_MOVE = 2
+LOOKAHEAD = 2
+LOOKAHEAD_MOVE = 3
 MOVEMENT_ONE = 128 + STARTING_PIECES * 2#128 + STARTING_PIECES * 2
 MOVEMENT_TWO = 64 + MOVEMENT_ONE + STARTING_PIECES * 2#64 + MOVEMENT_ONE + STARTING_PIECES * 2
 QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)] 
@@ -22,6 +22,8 @@ class Player:
         self.placementPhase = True
 
     def action(self, turns):
+        print(self.state.whitePieces)
+        print(self.state.blackPieces)
         if self.isWhite:
             print("calling action on whitePlayer on turn")
         else:
@@ -52,17 +54,13 @@ class Player:
         if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
             self.state.shrink(2)
 
-
-        # the first STARTING_PIECES*2 turns are definitely placement turns. 
         if self.placementPhase:
             nextMove = heurPlacement(self.state)
         else:
-            # if (MOVEMENT_ONE - turns <= 0):
-            #     turnsLeft = MOVEMENT_TWO - turns
-            # else:
-            #     turnsLeft = MOVEMENT_ONE - turns
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
+        
         self.selfUpdate(nextMove)
+        
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
         if turns == 22 and self.isWhite:
@@ -176,6 +174,7 @@ def getMoves(state):
     # state.printBoard()
     moveList = []
     if state.isWhiteTurn:
+        print(state.whitePieces)
         for piece in state.whitePieces:
             moveList += state.calcMovesForCoord(piece)
     else:

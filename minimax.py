@@ -19,18 +19,10 @@ class Player:
         self.isWhite = True if self.colour == "white" else False
         self.state = GameState(INITIAL_BOARD_SIZE, set(), set(), self.isWhite, self.isWhite)
         self.turns = 0 
-        self.placementPhase = True
 
     def action(self, turns):
-        print(self.state.whitePieces)
-        print(self.state.blackPieces)
-        if self.isWhite:
-            print("calling action on whitePlayer on turn")
-        else:
-            print("calling action on blackPlayer on turn")
         self.turns = turns
-        print(turns)
-
+        print("action called")
         # if even number of turns have passed, it is white's turn to play
         if turns % 2 == 0:
             self.state.isWhiteTurn = True
@@ -54,19 +46,17 @@ class Player:
         if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
             self.state.shrink(2)
 
-        if self.placementPhase:
+        if self.turns < STARTING_PIECES*2:
             nextMove = heurPlacement(self.state)
         else:
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
-        
+        self.turns += 1
         self.selfUpdate(nextMove)
         
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
-        if turns == 22 and self.isWhite:
-            self.placementPhase = False
-        if turns == 23:
-            self.placementPhase = False
+  
+
         return nextMove
 
     def updateMovement(self, move): # PROBLEM IS HERE> 
@@ -86,10 +76,12 @@ class Player:
     # Function that is called only by player, to update it's own state
     # after a move has been made. 
     def selfUpdate(self, action):
+        x = self.turns 
+        print("self update called with " + str(x))
         """Update internal game state according to own action"""
         if action == None: return
 
-        if self.placementPhase:
+        if self.turns <= 24:
             # update placement
             self.updatePlacement(action)
         else:
@@ -102,15 +94,8 @@ class Player:
 
     def update(self, action):
         # Hacky way to get turns to be right, from the way it is called in referee.py
-        if self.placementPhase:
-            self.turns += 1
-            if self.turns > 1: 
-                self.turns += 1
-        else:
-            if self.isWhite and self.turns == 22:
-                print("log.debug")
-                self.placementPhase = False
-                self.turns = 0
+        self.turns += 1
+        
         
 
         if self.isWhite:
@@ -133,8 +118,7 @@ class Player:
         else:
             self.state.isWhiteTurn = False
 
-        if self.placementPhase or (self.isWhite and self.turns is 0):
-            print("debug this bitch")
+        if self.turns <= 24:
             # update placement
             self.updatePlacement(action)
         else:

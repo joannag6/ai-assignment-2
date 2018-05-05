@@ -55,14 +55,12 @@ class Player:
         if turns < STARTING_PIECES * 2:
             nextMove = heurPlacement(self.state, min(LOOKAHEAD, STARTING_PIECES*2 - turns + 1))
         else:
-            print("log.debug: attempting to make moves")
             # if (MOVEMENT_ONE - turns <= 0):
             #     turnsLeft = MOVEMENT_TWO - turns
             # else:
             #     turnsLeft = MOVEMENT_ONE - turns
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
-            print("log.debug we reached here 2")
-        print("log.debug we reached here 3")
+
         self.selfUpdate(nextMove)
 
         # TODO: prints board when not running from referee. 
@@ -71,7 +69,7 @@ class Player:
 
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
-        print("log.debug we reached here 4")
+      
         return nextMove
 
     def updatePlacement(self, place):
@@ -94,7 +92,7 @@ class Player:
         """Update internal game state according to own action"""
         if action == None: returns
 
-        if self.turns < STARTING_PIECES * 2:
+        if self.turns <= STARTING_PIECES * 2:
             # update placement
             self.updatePlacement(action)
         else:
@@ -256,8 +254,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
                          not state.isWhiteTurn)
 
     # print(turnsLeft)
-    if not runningReferee:
-        newState.printBoard()
+ 
 
     if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
         newState.shrink(1)
@@ -404,7 +401,7 @@ def heurPlacement(state, turnsLeft):
     # From cells that result in kills, we choose a random cell with max kills. 
     # TODO: Implement distance to centre calculation for both kills and control style of play????
     if len(killList)>0:
-        print("KIIIIILLLLILLLLLL") #TODO: remove
+        print("KIIIIILLLLILLLLLL")
         # Prune the current killList so it only contains entries with max killValue. 
         killList2 = []
         maxKillValue, cell = max(killList)
@@ -458,10 +455,10 @@ def heurPlacement(state, turnsLeft):
 def controlValue(state, coord):
     enemyPieces = state.enemyPieces()
     allyPieces = state.allyPieces()
-    controlScore = 00
+    controlScore = 0
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
-        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty (coord1) and not state.isEnemy(enemyPieces,coord2):
+        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty(coord1) and not state.isEnemy(enemyPieces,coord2):
             controlScore += 1
     return controlScore       
 

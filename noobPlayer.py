@@ -14,7 +14,7 @@ QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),
 QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
 CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 
-runningReferee = True
+runningReferee = True # TODO remove before submission
 class Player:
     def __init__(self, colour):
         self.colour = colour
@@ -84,7 +84,7 @@ class Player:
             self.state.whitePieces.remove(move[0])
             self.state.whitePieces.add(move[1])
         else:
-            self.state.blackPieces.remove(move[0])
+            self.state. blackPieces.remove(move[0])
             self.state.blackPieces.add(move[1])
 
     # Function that is called only by player, to update it's own state
@@ -93,7 +93,7 @@ class Player:
         """Update internal game state according to own action"""
         if action == None: returns
 
-        if self.turns < STARTING_PIECES * 2:
+        if self.turns <= STARTING_PIECES * 2:
             # update placement
             self.updatePlacement(action)
         else:

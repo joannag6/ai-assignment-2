@@ -62,21 +62,14 @@ class Player:
             # else:
             #     turnsLeft = MOVEMENT_ONE - turns
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
-
         self.selfUpdate(nextMove)
-
         # return (x, y) for placing piece
         # return ((oldx, oldy), (newx, newy)) for moving piece
+        if turns == 22 and self.isWhite:
+            self.placementPhase = False
         if turns == 23:
             self.placementPhase = False
-      
         return nextMove
-
-    def updatePlacement(self, place):
-        if self.state.isWhiteTurn:
-            self.state.whitePieces.add(place)
-        else:
-            self.state.blackPieces.add(place)
 
     def updateMovement(self, move): # PROBLEM IS HERE> 
         if self.state.isWhiteTurn:
@@ -85,6 +78,12 @@ class Player:
         else:
             self.state.blackPieces.remove(move[0])
             self.state.blackPieces.add(move[1])
+
+    def updatePlacement(self, place):
+        if self.state.isWhiteTurn:
+            self.state.whitePieces.add(place)
+        else:
+            self.state.blackPieces.add(place)
 
     # Function that is called only by player, to update it's own state
     # after a move has been made. 
@@ -105,9 +104,16 @@ class Player:
 
     def update(self, action):
         # Hacky way to get turns to be right, from the way it is called in referee.py
-        self.turns += 1
-        if self.turns > 1: 
+        if self.placementPhase:
             self.turns += 1
+            if self.turns > 1: 
+                self.turns += 1
+        else:
+            if self.isWhite and self.turns == 22:
+                print("log.debug")
+                self.placementPhase = False
+                self.turns = 0
+        
 
         if self.isWhite:
             print("calling update on whitePlayer on turn")
@@ -122,8 +128,6 @@ class Player:
             self.state.shrink(2)
 
         if action == None: 
-            if not self.isWhite:
-                self.turns += 1
             return
 
         if self.turns % 2 == 0:
@@ -131,7 +135,8 @@ class Player:
         else:
             self.state.isWhiteTurn = False
 
-        if self.placementPhase:
+        if self.placementPhase or (self.isWhite and self.turns is 0):
+            print("debug this bitch")
             # update placement
             self.updatePlacement(action)
         else:
@@ -140,8 +145,31 @@ class Player:
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
-        if self.turns >= 24:
-            self.placementPhase = False
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def getMoves(state):
     # print("*")
@@ -157,30 +185,6 @@ def getMoves(state):
     # print("*")
 
     return moveList # list of possible moves for that player
-
-
-def getPlaces(state):
-    placeList = []
-    # If it is white's turn, it means we can only put in white's starting zone. 
-    # Create a set of all the coordinates minus the bottom two rows, then exclude
-    # the ones already with pieces and corners. 
-    placeList = []
-    if state.isWhiteTurn:
-        for x in range(8):
-            for y in range(6):
-                coord = (x,y)
-                if (coord not in state.whitePieces and coord not in state.blackPieces
-                        and coord not in CORNERS):
-                    placeList.append(coord)
-
-    else:
-        for x in range(8):
-            for y in range(2,8):
-                coord = (x,y)
-                if (coord not in state.whitePieces and coord not in state.blackPieces
-                        and coord not in CORNERS):
-                    placeList.append(coord)
-    return placeList
 
 
 # dummy utility function for terminal states
@@ -314,6 +318,54 @@ def getPlaceValue(place, ownTurn, state, turnsLeft):
     return min(choices)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def getPlaces(state):
+    placeList = []
+    # If it is white's turn, it means we can only put in white's starting zone. 
+    # Create a set of all the coordinates minus the bottom two rows, then exclude
+    # the ones already with pieces and corners. 
+    placeList = []
+    if state.isWhiteTurn:
+        for x in range(8):
+            for y in range(6):
+                coord = (x,y)
+                if (coord not in state.whitePieces and coord not in state.blackPieces
+                        and coord not in CORNERS):
+                    placeList.append(coord)
+
+    else:
+        for x in range(8):
+            for y in range(2,8):
+                coord = (x,y)
+                if (coord not in state.whitePieces and coord not in state.blackPieces
+                        and coord not in CORNERS):
+                    placeList.append(coord)
+    return placeList
+
 # Function that just makes valid placements. 
 def noobPlacement(state):
     choices = []
@@ -437,3 +489,5 @@ def killValue(state, coord):
         if inBoardRange(coord1) and inBoardRange(coord2) and state.isEnemy(enemyPieces, coord1) and state.isAlly(allyPieces, coord2):
             killValue+=1
     return killValue
+
+

@@ -18,6 +18,7 @@ class GameState:
         self.blackPieces = blackPieces
         self.isWhitePlayer = isWhitePlayer
         self.isWhiteTurn = isWhiteTurn
+        self.corners = {0,7}
 
     def removeOutOfBounds(self, pieces):
         newPieces = set()
@@ -26,11 +27,13 @@ class GameState:
                 newPieces.add((i, j))
         return newPieces
 
-
-    def shrink(self, newPhase): #TODO: handle corners
-        if self.phase == START_PHASE + newPhase: return
-        self.phase = START_PHASE + newPhase
-        self.size = INITIAL_BOARD_SIZE - 2 * newPhase
+    def shrink(self, newPhase):
+        if newPhase == 1:
+            self.corners = {1,6}
+            self.size = 6
+        if newPhase == 2:
+            self.corners = {2,5}
+            self.size = 4
         self.whitePieces = self.removeOutOfBounds(self.whitePieces).copy()
         self.blackPieces = self.removeOutOfBounds(self.blackPieces).copy()
         removeEatenPieces(self, True)
@@ -134,27 +137,21 @@ class GameState:
 
     def corner(self, i, j):
         """Checks if coordinates given is a corner of the board."""
-        corner_coords = {self.phase, INITIAL_BOARD_SIZE - self.phase - 1}
-        return i in corner_coords and j in corner_coords
+        return i in self.corners and j in self.corners
 
 
     def withinBounds(self, i, j):
         """Checks if coordinates given is on the board."""
-        # TODO: find a better way to do this. 
-        cells = []
-        for x in range(8):
-        	for y in range(8): 
-        		cells.append((x,y))
-        return (i,j) in cells and not self.corner(i,j)
-        return ((self.phase <= i < (self.size+self.phase)) and
-                (self.phase <= j < (self.size+self.phase)) and
+        # TODO: find a better way to do this.
+        corners = self.corners
+        return (min(corners) <= i <= max(corners) and
+                (min(corners) <= j <= max(corners)) and
                 not self.corner(i, j))
-
 
     def isEnemy(self, enemyPieces, coordinate):
         """Checks if coordinates belong to the enemy (or is a corner)."""
         i, j = coordinate
-        return self.withinBounds(i, j) and (coordinate in enemyPieces or self.corner(i, j))
+        return (self.withinBounds(i, j) and coordinate in enemyPieces) or self.corner(i, j)
 
     def isAlly(self, allyPieces, coordinate):
         """Checks if coordinates belong to ally"""

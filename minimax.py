@@ -5,8 +5,8 @@ PLACEMENT_LINE = 2
 STARTING_PIECES = 12
 LOOKAHEAD = 2
 LOOKAHEAD_MOVE = 3
-MOVEMENT_ONE = 128 + STARTING_PIECES * 2#128 + STARTING_PIECES * 2
-MOVEMENT_TWO = 64 + MOVEMENT_ONE + STARTING_PIECES * 2#64 + MOVEMENT_ONE + STARTING_PIECES * 2
+MOVEMENT_ONE = 128
+MOVEMENT_TWO = 192
 QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)] 
 QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
 QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
@@ -18,11 +18,13 @@ class Player:
         self.colour = colour
         self.isWhite = True if self.colour == "white" else False
         self.state = GameState(INITIAL_BOARD_SIZE, set(), set(), self.isWhite, self.isWhite)
+        self.placingPhase = True
         self.turns = 0 
 
     def action(self, turns):
+        print("action called, turns passed is: " + str(turns))
+        # Referee will pass the number of turns that have happened. 
         self.turns = turns
-        print("action called")
         # if even number of turns have passed, it is white's turn to play
         if turns % 2 == 0:
             self.state.isWhiteTurn = True
@@ -35,19 +37,15 @@ class Player:
 
         """turns: int, total turns"""
         nextMove = None # if passing turn
-        
-        # Code that implements shrinking. 
-        if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-            self.state.shrink(1)
-        if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
-            self.state.shrink(2)
 
-        if self.turns < STARTING_PIECES*2:
+        if self.placingPhase:
             nextMove = heurPlacement(self.state)
         else:
-            print("debugggingg")
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
+
+        # Increments the number of turns that have happened, since an action took place.
         self.turns += 1
+
         self.selfUpdate(nextMove)
         
         # return (x, y) for placing piece
@@ -73,28 +71,40 @@ class Player:
     # Function that is called only by player, to update it's own state
     # after a move has been made. 
     def selfUpdate(self, action):
-        x = self.turns 
-        print("self update called with " + str(x))
         """Update internal game state according to own action"""
         if action == None: return
 
-        if self.turns <= 24:
+
+        if self.placingPhase:
             # update placement
             self.updatePlacement(action)
         else:
             # update movement
             self.updateMovement(action)
-
+        if not self.placingPhase: 
+            # Code that implements shrinking. 
+            if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+                if self.isWhite:    
+                    print("shrinking happened for white in self update")
+                if not self.isWhite:    
+                    print("shrinking happened for black in self update")
+                self.state.shrink(1)
+                if self.isWhite:
+                    print("After shrinking, our remaining white pieces are: " + str(self.state.whitePieces) )
+                if not self.isWhite:
+                     print("After shrinking, our remaining black pieces are: " + str(self.state.blackPieces))
+            if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+                self.state.shrink(2)
+                
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
-        
+        if self.turns >= 24 and self.placingPhase:
+            self.placingPhase = False
+
 
     def update(self, action):
-        # Hacky way to get turns to be right, from the way it is called in referee.py
-        self.turns += 1
+        self.turns += 1  
         
-        
-
         if self.isWhite:
             print("calling update on whitePlayer on turn")
         else:
@@ -102,28 +112,45 @@ class Player:
         print(self.turns)
         """Update internal game state according to opponent's action"""
 
-        if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-            self.state.shrink(1)
-        if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
-            self.state.shrink(2)
-
         if action == None: 
             return
 
-        if self.turns % 2 == 0:
+        # Different equalities from action, this is intentional.
+        if self.turns % 2 != 0:
             self.state.isWhiteTurn = True
         else:
             self.state.isWhiteTurn = False
 
-        if self.turns <= 24:
+        if self.placingPhase:
             # update placement
             self.updatePlacement(action)
         else:
             # update movement
             self.updateMovement(action)
 
+        if not self.placingPhase: 
+            # Code that implements shrinking. 
+            if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+                if self.isWhite:    
+                    print("shrinking happened for white in update")
+                if not self.isWhite:    
+                    print("shrinking happened for black in update")
+                self.state.shrink(1)
+                if self.isWhite:
+                    print("After shrinking, our remaining white pieces are: " + str(self.state.whitePieces) )
+                if not self.isWhite:
+                     print("After shrinking, our remaining black pieces are: " + str(self.state.blackPieces))
+            if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+                self.state.shrink(2)
+
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
+
+        # When black makes 24th move, white's self.turns == 24 after the increment in update(). 
+        # Then, after the code for update reaches this point, we have to toggle white's placingPhase
+        # to False. 
+        if self.turns == 24 and self.placingPhase:
+            self.placingPhase = False
         
 
 
@@ -149,16 +176,17 @@ class Player:
 
 
 
-
+# This is calling the wrong set of pieces. 
 def getMoves(state):
     # print("*")
     # state.printBoard()
     moveList = []
     if state.isWhiteTurn:
-        print(state.whitePieces)
+        print("white Pieces: " + str(state.whitePieces))
         for piece in state.whitePieces:
             moveList += state.calcMovesForCoord(piece)
     else:
+        print("Black Piece: " + str(state.blackPieces))
         for piece in state.blackPieces:
             moveList += state.calcMovesForCoord(piece)
     # print(moveList)
@@ -243,14 +271,17 @@ def minimaxMovement(state, turnsLeft, turns):
         state.shrink(2)
 
     for move in getMoves(state):
-        choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1), move))
+        #choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1), move))
+        # TODO
+        choices.append(move)
     # print(choices)
 
     if choices == []:
         return None
-
-    return getRandMax(choices)[1]
-
+    return random.choice(choices)
+    #return getRandMax(choices)[1]
+    # TODO
+    return getRandMax(choice)
 
 def getRandMin(tupList):
     smallestVal = min(tupList)[0]

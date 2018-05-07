@@ -81,6 +81,8 @@ class Player:
         else:
             # update movement
             self.updateMovement(action)
+        if self.turns == 24 and self.placingPhase:
+            self.placingPhase = False
         if not self.placingPhase: 
             # Code that implements shrinking. 
             if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
@@ -98,8 +100,7 @@ class Player:
                 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
-        if self.turns >= 24 and self.placingPhase:
-            self.placingPhase = False
+
 
 
     def update(self, action):

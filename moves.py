@@ -34,8 +34,8 @@ class GameState:
         if newPhase == 2:
             self.corners = {2,5}
             self.size = 4
-        self.whitePieces = self.removeOutOfBounds(self.whitePieces).copy()
-        self.blackPieces = self.removeOutOfBounds(self.blackPieces).copy()
+        self.whitePieces = self.removeOutOfBounds(self.whitePieces)
+        self.blackPieces = self.removeOutOfBounds(self.blackPieces)
         removeEatenPieces(self, True)
         removeEatenPieces(self, False)
 
@@ -78,7 +78,7 @@ class GameState:
 
     def isEmpty_(self, i,j):
         """Checks if there are any pieces in the cell specified by (i, j)."""
-        
+
         return ((i, j) not in self.blackPieces
                 and (i, j) not in self.whitePieces
                 and not self.corner(i, j))
@@ -88,8 +88,8 @@ class GameState:
         i,j = coordinate
         return ((i, j) not in self.blackPieces
                 and (i, j) not in self.whitePieces
-                and not self.corner(i, j))  
-    
+                and not self.corner(i, j))
+
     def canJumpRight_(self, i, j):
         """Checks if piece can jump right"""
         if self.withinBounds(i+2, j) and self.isEmpty_(i+2, j):
@@ -157,7 +157,7 @@ class GameState:
         """Checks if coordinates belong to ally"""
         i, j = coordinate
         return self.withinBounds(i, j) and (coordinate in allyPieces or self.corner(i, j))
-    
+
 
     def canEat(self, enemyPieces, side1, side2):
         """Checks a piece between side1 and side2 will be eaten."""
@@ -201,13 +201,13 @@ def removeEatenPieces(state, eatWhite):
         toEatPieces.remove(pieceToRemove)
     return toEatPieces
 
-# Function that determines if a cell is within range of the board. 
+# Function that determines if a cell is within range of the board.
 def inBoardRange(coord):
     x,y = coord
     return x>-1 and x<8 and y >-1 and y <8
 
-# Functions that return coord of cells up down left right, 
-# does not check for board range. 
+# Functions that return coord of cells up down left right,
+# does not check for board range.
 def up(coord):
     x,y = coord
     return x,y-1
@@ -222,7 +222,7 @@ def right(coord):
     return x+1, y
 
 # Functions that return coord of cells that are two up, down,
-# left, right. Does not check for board range. 
+# left, right. Does not check for board range.
 def twoUp(coord):
     x,y = coord
     return x,y-2
@@ -237,7 +237,7 @@ def twoRight(coord):
     return x+2, y
 
 # Function that returns coord of adjacent cells, checks for board
-# range. 
+# range.
 def adjacentCells(x,y):
     adjacentCells = [up(x,y), down(x,y), left(x,y), right(x,y)]
     for cell in adjacentCells:
@@ -245,8 +245,8 @@ def adjacentCells(x,y):
             adjacentCells.remove(cell)
     return adjacentCells
 
-# Function that returns coord of adjacent cells, 
-# two cells away, checks for board range. 
+# Function that returns coord of adjacent cells,
+# two cells away, checks for board range.
 def twoAdjacentCells(x,y):
     adjacentAdjacentCells = [twoUp(x,y), twoDown(x,y), twoLeft(x,y), twoRight(x,y)]
     for cell in adjacentCells:

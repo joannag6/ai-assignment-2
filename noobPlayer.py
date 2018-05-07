@@ -36,7 +36,8 @@ class Player:
         self.turns = 0
 
     def action(self, turns):
-        # Referee will pass the number of turns that have happened.
+        print("action called, turns passed is: " + str(turns))
+
         self.turns = turns
         # if even number of turns have passed, it is white's turn to play
         if turns % 2 == 0:
@@ -58,13 +59,6 @@ class Player:
 
         # Increments the number of turns that have happened, since an action took place.
         self.turns += 1
-        if not self.placingPhase:
-            # Code that implements shrinking.
-            if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-                self.state.shrink(1)
-            if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
-                self.state.shrink(2)
-
         self.selfUpdate(nextMove)
 
         # return (x, y) for placing piece
@@ -90,7 +84,6 @@ class Player:
     # Function that is called only by player, to update it's own state
     # after a move has been made.
     def selfUpdate(self, action):
-        x = self.turns
         """Update internal game state according to own action"""
         if action == None: return
 
@@ -101,11 +94,26 @@ class Player:
         else:
             # update movement
             self.updateMovement(action)
+        if self.turns == 24 and self.placingPhase:
+            self.placingPhase = False
+        if not self.placingPhase:
+            # Code that implements shrinking.
+            if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+                if self.isWhite:
+                    print("shrinking happened for white in self update")
+                if not self.isWhite:
+                    print("shrinking happened for black in self update")
+                self.state.shrink(1)
+                if self.isWhite:
+                    print("After shrinking, our remaining white pieces are: " + str(self.state.whitePieces) )
+                if not self.isWhite:
+                     print("After shrinking, our remaining black pieces are: " + str(self.state.blackPieces))
+            if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+                self.state.shrink(2)
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
-        if self.turns >= 24 and self.placingPhase:
-            self.placingPhase = False
+
 
 
     def update(self, action):
@@ -117,13 +125,6 @@ class Player:
             print("calling update on blackPlayer on turn")
         print(self.turns)
         """Update internal game state according to opponent's action"""
-
-        if not self.placingPhase:
-            # Code that implements shrinking.
-            if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-                self.state.shrink(1)
-            if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
-                self.state.shrink(2)
 
         if action == None:
             return
@@ -140,6 +141,21 @@ class Player:
         else:
             # update movement
             self.updateMovement(action)
+
+        if not self.placingPhase:
+            # Code that implements shrinking.
+            if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+                if self.isWhite:
+                    print("shrinking happened for white in update")
+                if not self.isWhite:
+                    print("shrinking happened for black in update")
+                self.state.shrink(1)
+                if self.isWhite:
+                    print("After shrinking, our remaining white pieces are: " + str(self.state.whitePieces) )
+                if not self.isWhite:
+                     print("After shrinking, our remaining black pieces are: " + str(self.state.blackPieces))
+            if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+                self.state.shrink(2)
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)

@@ -21,6 +21,7 @@ class Player:
         self.turns = 0
 
     def action(self, turns):
+        """turns: int, total turns for that phase"""
         print("action called, turns passed is: " + str(turns))
 
         # Referee will pass the number of turns that have happened.
@@ -36,7 +37,6 @@ class Player:
         if not self.state.isWhiteTurn:
             print("BLACK TURN")
 
-        """turns: int, total turns"""
         nextMove = None # if passing turn
 
         if self.placingPhase:
@@ -81,8 +81,7 @@ class Player:
         else:
             # update movement
             self.updateMovement(action)
-        if self.turns == 24 and self.placingPhase:
-            self.placingPhase = False
+
         if not self.placingPhase:
             # Code that implements shrinking.
             if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
@@ -100,6 +99,9 @@ class Player:
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
+
+        if self.placingPhase and self.turns == STARTING_PIECES*2:
+            self.placingPhase = False
 
 
     def update(self, action):
@@ -149,7 +151,7 @@ class Player:
         # When black makes 24th move, white's self.turns == 24 after the increment in update().
         # Then, after the code for update reaches this point, we have to toggle white's placingPhase
         # to False.
-        if self.turns == 24 and self.placingPhase:
+        if self.placingPhase and self.turns == STARTING_PIECES*2:
             self.placingPhase = False
 
 
@@ -458,6 +460,14 @@ def main():
     whitePlayer = Player("white")
     blackPlayer = Player("black")
 
+    for i in range(0,24):
+        nextMove = whitePlayer.action(i)
+        print("white: " + str(nextMove))
+        blackPlayer.update(nextMove)
+
+        nextMove = blackPlayer.action(i+1)
+        print("black: " + str(nextMove))
+        whitePlayer.update(nextMove)
 
     for turns in range(0, MOVEMENT_TWO+2, 2):
         nextMove = whitePlayer.action(turns)

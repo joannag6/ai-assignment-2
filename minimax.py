@@ -3,7 +3,6 @@ from moves import *
 
 PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD = 2
 LOOKAHEAD_MOVE = 3
 MOVEMENT_ONE = 128
 MOVEMENT_TWO = 192
@@ -44,6 +43,7 @@ class Player:
             nextMove = heurPlacement(self.state)
         else:
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
+            print(nextMove)
 
         # Increments the number of turns that have happened, since an action took place.
         self.turns += 1
@@ -159,11 +159,11 @@ def getMoves(state):
     # state.printBoard()
     moveList = []
     if state.isWhiteTurn:
-        print("white Pieces: " + str(state.whitePieces))
+        # print("white Pieces: " + str(state.whitePieces))
         for piece in state.whitePieces:
             moveList += state.calcMovesForCoord(piece)
     else:
-        print("Black Piece: " + str(state.blackPieces))
+        # print("Black Piece: " + str(state.blackPieces))
         for piece in state.blackPieces:
             moveList += state.calcMovesForCoord(piece)
     # print(moveList)
@@ -208,9 +208,9 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
     # print(turnsLeft)
 
 
-    if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+    if turns == MOVEMENT_ONE - STARTING_PIECES * 2: # end of first moving stage (going to 6x6)
         newState.shrink(1)
-    if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+    if turns == MOVEMENT_TWO - STARTING_PIECES * 2: # end of second moving stage (going to 4x4)
         newState.shrink(2)
 
     # run check if anything eaten, priority determined by turn
@@ -248,17 +248,17 @@ def minimaxMovement(state, turnsLeft, turns):
         state.shrink(2)
 
     for move in getMoves(state):
-        #choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1), move))
+        choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1), move))
         # TODO
-        choices.append(move)
+        # choices.append(move)
     # print(choices)
 
     if choices == []:
         return None
-    return random.choice(choices)
-    #return getRandMax(choices)[1]
+    # return random.choice(choices)
+    return getRandMax(choices)[1]
     # TODO
-    return getRandMax(choice)
+    # return getRandMax(choices)
 
 def getRandMin(tupList):
     smallestVal = min(tupList)[0]

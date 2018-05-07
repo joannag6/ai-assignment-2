@@ -14,6 +14,19 @@ QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),
 QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
 CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 
+def noobMovement(state, turnsLeft, turns):
+    choices = []
+    if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+        state.shrink(1)
+    if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+        state.shrink(2)
+
+    choices = getMoves(state)
+
+    if choices == []:
+        return None
+    return random.choice(choices)
+
 class Player:
     def __init__(self, colour):
         self.colour = colour
@@ -41,7 +54,7 @@ class Player:
         if self.placingPhase:
             nextMove = noobPlacement(self.state)
         else:
-            nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
+            nextMove = noobMovement(self.state, LOOKAHEAD_MOVE, turns)
 
         # Increments the number of turns that have happened, since an action took place.
         self.turns += 1

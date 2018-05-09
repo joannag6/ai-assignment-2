@@ -177,7 +177,6 @@ class Player:
 
 
 
-# This is calling the wrong set of pieces. 
 def getMoves(state):
     # print("*")
     # state.printBoard()

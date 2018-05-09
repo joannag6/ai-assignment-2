@@ -3,7 +3,7 @@ from moves import *
 
 PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD_MOVE = 3
+LOOKAHEAD_MOVE = 5
 MOVEMENT_ONE = 128
 MOVEMENT_TWO = 192
 QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)]
@@ -21,6 +21,7 @@ class Player:
         self.turns = 0
 
     def action(self, turns):
+        """turns: int, total turns for that phase"""
         print("action called, turns passed is: " + str(turns))
 
         # Referee will pass the number of turns that have happened.
@@ -36,7 +37,6 @@ class Player:
         if not self.state.isWhiteTurn:
             print("BLACK TURN")
 
-        """turns: int, total turns"""
         nextMove = None # if passing turn
 
         if self.placingPhase:
@@ -81,8 +81,7 @@ class Player:
         else:
             # update movement
             self.updateMovement(action)
-        if self.turns == 24 and self.placingPhase:
-            self.placingPhase = False
+
         if not self.placingPhase:
             # Code that implements shrinking.
             if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
@@ -100,6 +99,9 @@ class Player:
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
+
+        if self.placingPhase and self.turns >= STARTING_PIECES*2:
+            self.placingPhase = False
 
 
     def update(self, action):
@@ -149,7 +151,7 @@ class Player:
         # When black makes 24th move, white's self.turns == 24 after the increment in update().
         # Then, after the code for update reaches this point, we have to toggle white's placingPhase
         # to False.
-        if self.turns == 24 and self.placingPhase:
+        if self.placingPhase and self.turns >= STARTING_PIECES*2:
             self.placingPhase = False
 
 
@@ -182,7 +184,7 @@ def getEvaluationValue(state):
 
 # different for placing and moving stage??
 # returns integer value representing utility value
-def getMoveValue(move, ownTurn, state, turnsLeft, turns):
+def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
     # just implement for moving stage first
 
     #state.printBoard()
@@ -206,11 +208,9 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
                          not state.isWhiteTurn)
 
     # print(turnsLeft)
-
-
-    if turns == MOVEMENT_ONE - STARTING_PIECES * 2: # end of first moving stage (going to 6x6)
+    if turns == MOVEMENT_ONE - 1: # end of first moving stage (going to 6x6)
         newState.shrink(1)
-    if turns == MOVEMENT_TWO - STARTING_PIECES * 2: # end of second moving stage (going to 4x4)
+    if turns == MOVEMENT_TWO - 1: # end of second moving stage (going to 4x4)
         newState.shrink(2)
 
     # run check if anything eaten, priority determined by turn
@@ -222,7 +222,15 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
 
     choices = []
     for nextMove in getMoves(newState):
-        choices.append(getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns+1))
+        nextVal = getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns+1, alpha, beta)
+        if ownTurn:
+            if beta == None:      beta = nextVal
+            elif nextVal >= beta: return nextVal
+            else:                 choices.append(nextVal)
+        if not ownTurn:
+            if alpha == None:      alpha = nextVal
+            elif nextVal <= alpha: return nextVal
+            else:                 choices.append(nextVal)
 
     if choices == []:
         # print("no more choices")
@@ -242,13 +250,13 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns):
 
 def minimaxMovement(state, turnsLeft, turns):
     choices = []
-    if turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+    if turns == MOVEMENT_ONE - 1: # end of first moving stage (going to 6x6)
         state.shrink(1)
-    if turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+    if turns == MOVEMENT_TWO - 1: # end of second moving stage (going to 4x4)
         state.shrink(2)
 
     for move in getMoves(state):
-        choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1), move))
+        choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1, None, None), move))
         # TODO
         # choices.append(move)
     # print(choices)
@@ -269,42 +277,42 @@ def getRandMax(tupList):
     return random.choice([tup for tup in tupList if tup[0] == smallestVal])
 
 
-# returns integer value representing utility value
-def getPlaceValue(place, ownTurn, state, turnsLeft):
-    # just implement for moving stage first
-
-    # if ownTurn is True, get max.
-    newWhitePieces = state.whitePieces.copy()
-    newBlackPieces = state.blackPieces.copy()
-
-    if state.isWhiteTurn:
-        newWhitePieces.add(place)
-    else:
-        newBlackPieces.add(place)
-
-    newState = GameState(state.size,
-                         newWhitePieces,
-                         newBlackPieces,
-                         state.isWhitePlayer,
-                         not state.isWhiteTurn)
-
-    # run check if anything eaten, priority determined by turn
-    removeEatenPieces(newState, not newState.isWhiteTurn)
-    removeEatenPieces(newState, newState.isWhiteTurn)
-
-    #newState.printBoard()
-
-    if turnsLeft == 0 or newState.isEndState():
-        return getEvaluationValue(newState)
-
-    choices = []
-    for place in getPlaces(newState):
-        choices.append((getPlaceValue(place, not ownTurn, newState, turnsLeft-1)))
-
-    if ownTurn:
-        return max(choices)
-    return min(choices)
-
+# # returns integer value representing utility value
+# def getPlaceValue(place, ownTurn, state, turnsLeft):
+#     # just implement for moving stage first
+#
+#     # if ownTurn is True, get max.
+#     newWhitePieces = state.whitePieces.copy()
+#     newBlackPieces = state.blackPieces.copy()
+#
+#     if state.isWhiteTurn:
+#         newWhitePieces.add(place)
+#     else:
+#         newBlackPieces.add(place)
+#
+#     newState = GameState(state.size,
+#                          newWhitePieces,
+#                          newBlackPieces,
+#                          state.isWhitePlayer,
+#                          not state.isWhiteTurn)
+#
+#     # run check if anything eaten, priority determined by turn
+#     removeEatenPieces(newState, not newState.isWhiteTurn)
+#     removeEatenPieces(newState, newState.isWhiteTurn)
+#
+#     #newState.printBoard()
+#
+#     if turnsLeft == 0 or newState.isEndState():
+#         return getEvaluationValue(newState)
+#
+#     choices = []
+#     for place in getPlaces(newState):
+#         choices.append((getPlaceValue(place, not ownTurn, newState, turnsLeft-1)))
+#
+#     if ownTurn:
+#         return max(choices)
+#     return min(choices)
+#
 
 def getPlaces(state):
     placeList = []
@@ -458,6 +466,14 @@ def main():
     whitePlayer = Player("white")
     blackPlayer = Player("black")
 
+    for i in range(0,24):
+        nextMove = whitePlayer.action(i)
+        print("white: " + str(nextMove))
+        blackPlayer.update(nextMove)
+
+        nextMove = blackPlayer.action(i+1)
+        print("black: " + str(nextMove))
+        whitePlayer.update(nextMove)
 
     for turns in range(0, MOVEMENT_TWO+2, 2):
         nextMove = whitePlayer.action(turns)

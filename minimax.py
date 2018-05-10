@@ -131,10 +131,14 @@ def getMoves(state):
     moveList = []
     if state.isWhiteTurn:
         for piece in state.whitePieces:
-            moveList += state.calcMovesForCoord(piece)
+            moveList += state.calcMovesForCoord(piece, state.blackPieces)
     else:
         for piece in state.blackPieces:
-            moveList += state.calcMovesForCoord(piece)
+
+            moveList += state.calcMovesForCoord(piece, state.whitePieces)
+    # print(moveList)
+    # print("*")
+
     return moveList # list of possible moves for that player
 
 
@@ -183,17 +187,26 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
     for nextMove in getMoves(newState):
         nextVal = getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns+1, alpha, beta)
         if ownTurn:
-            if beta == None:      beta = nextVal
-            elif nextVal >= beta: return nextVal
-            else:                 choices.append(nextVal)
+            if beta == None:
+                beta = nextVal
+                choices.append(nextVal)
+            elif nextVal >= beta:
+                return nextVal
+            else:
+                choices.append(nextVal)
         if not ownTurn:
-            if alpha == None:      alpha = nextVal
-            elif nextVal <= alpha: return nextVal
-            else:                 choices.append(nextVal)
+            if alpha == None:
+                alpha = nextVal
+                choices.append(nextVal)
+            elif nextVal <= alpha:
+                return nextVal
+            else:
+                choices.append(nextVal)
 
     if choices == []:
-        if (getMoves(newState) == []):
-            return getEvaluationValue(newState) # TODO or None?
+
+        return getEvaluationValue(newState) # TODO or None?
+
 
     if ownTurn:
         return max(choices)
@@ -229,7 +242,6 @@ def noobMovement(state, turnsLeft, turns):
         return None
     # return random.choice(choices)
     return random.choice(choices)
-
 
 
 def getRandMin(tupList):
@@ -368,7 +380,7 @@ def controlValue(state, coord):
     controlScore = 0
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
-        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty(coord1) and not state.isEnemy(enemyPieces,coord2):
+        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty_(coord1[0], coord1[1]) and not state.isEnemy(enemyPieces,coord2):
             controlScore += 1
     return controlScore
 

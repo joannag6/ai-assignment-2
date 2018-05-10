@@ -224,24 +224,24 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
     for nextMove in getMoves(newState):
         nextVal = getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns+1, alpha, beta)
         if ownTurn:
-            if beta == None:      beta = nextVal
-            elif nextVal >= beta: return nextVal
-            else:                 choices.append(nextVal)
+            if beta == None:
+                beta = nextVal
+                choices.append(nextVal)
+            elif nextVal >= beta:
+                return nextVal
+            else:
+                choices.append(nextVal)
         if not ownTurn:
-            if alpha == None:      alpha = nextVal
-            elif nextVal <= alpha: return nextVal
-            else:                 choices.append(nextVal)
+            if alpha == None:
+                alpha = nextVal
+                choices.append(nextVal)
+            elif nextVal <= alpha:
+                return nextVal
+            else:
+                choices.append(nextVal)
 
     if choices == []:
-        # print("no more choices")
-        # print(state.whitePieces)
-        # print(state.blackPieces)
-        # print(move)
-        # print(newState.whitePieces)
-        # print(newState.blackPieces)
-        if (getMoves(newState) == []):
-            # print("no new moves?")
-            return getEvaluationValue(newState) # TODO or None?
+        return getEvaluationValue(newState) # TODO or None?
 
     if ownTurn:
         return max(choices)

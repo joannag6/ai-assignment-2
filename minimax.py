@@ -22,7 +22,6 @@ class Player:
 
     def action(self, turns):
         """turns: int, total turns for that phase"""
-        print("action called, turns passed is: " + str(turns))
 
         # Referee will pass the number of turns that have happened.
         self.turns = turns
@@ -32,19 +31,13 @@ class Player:
             self.state.isWhiteTurn = True
         else:
             self.state.isWhiteTurn = False
-        if self.state.isWhiteTurn:
-            print("WHITE TURN")
-        if not self.state.isWhiteTurn:
-            print("BLACK TURN")
 
         nextMove = None # if passing turn
 
         if self.placingPhase:
-            nextMove = heurPlacement(self.state)
+            nextMove = heurPlacement(self)
         else:
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
-            print(nextMove)
-
         # Increments the number of turns that have happened, since an action took place.
         self.turns += 1
 
@@ -85,15 +78,9 @@ class Player:
         if not self.placingPhase:
             # Code that implements shrinking.
             if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-                if self.isWhite:
-                    print("shrinking happened for white in self update")
-                if not self.isWhite:
-                    print("shrinking happened for black in self update")
+
                 self.state.shrink(1)
-                if self.isWhite:
-                    print("After shrinking, our remaining white pieces are: " + str(self.state.whitePieces) )
-                if not self.isWhite:
-                     print("After shrinking, our remaining black pieces are: " + str(self.state.blackPieces))
+
             if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
                 self.state.shrink(2)
 
@@ -106,12 +93,6 @@ class Player:
 
     def update(self, action):
         self.turns += 1
-
-        if self.isWhite:
-            print("calling update on whitePlayer on turn")
-        else:
-            print("calling update on blackPlayer on turn")
-        print(self.turns)
         """Update internal game state according to opponent's action"""
 
         if action == None:
@@ -133,15 +114,7 @@ class Player:
         if not self.placingPhase:
             # Code that implements shrinking.
             if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-                if self.isWhite:
-                    print("shrinking happened for white in update")
-                if not self.isWhite:
-                    print("shrinking happened for black in update")
                 self.state.shrink(1)
-                if self.isWhite:
-                    print("After shrinking, our remaining white pieces are: " + str(self.state.whitePieces) )
-                if not self.isWhite:
-                     print("After shrinking, our remaining black pieces are: " + str(self.state.blackPieces))
             if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
                 self.state.shrink(2)
 
@@ -154,19 +127,14 @@ class Player:
         if self.placingPhase and self.turns >= STARTING_PIECES*2:
             self.placingPhase = False
 
-
-# This is calling the wrong set of pieces.
 def getMoves(state):
-    # print("*")
-    # state.printBoard()
     moveList = []
     if state.isWhiteTurn:
-        # print("white Pieces: " + str(state.whitePieces))
         for piece in state.whitePieces:
             moveList += state.calcMovesForCoord(piece, state.blackPieces)
     else:
-        # print("Black Piece: " + str(state.blackPieces))
         for piece in state.blackPieces:
+
             moveList += state.calcMovesForCoord(piece, state.whitePieces)
     # print(moveList)
     # print("*")
@@ -178,17 +146,13 @@ def getMoves(state):
 # for now = ownPieces - oppPieces
 def getEvaluationValue(state):
     if state.isWhitePlayer:
-        return len(state.whitePieces) - len(state.blackPieces)
-    return len(state.blackPieces) - len(state.whitePieces)
+        return 2*len(state.whitePieces) - len(state.blackPieces)
+    return 2*len(state.blackPieces) - len(state.whitePieces)
 
 
 # different for placing and moving stage??
 # returns integer value representing utility value
 def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
-    # just implement for moving stage first
-
-    #state.printBoard()
-    #print(move)
 
     # if ownTurn is True, get max.
     newWhitePieces = state.whitePieces.copy()
@@ -207,7 +171,6 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
                          state.isWhitePlayer,
                          not state.isWhiteTurn)
 
-    # print(turnsLeft)
     if turns == MOVEMENT_ONE - 1: # end of first moving stage (going to 6x6)
         newState.shrink(1)
     if turns == MOVEMENT_TWO - 1: # end of second moving stage (going to 4x4)
@@ -241,7 +204,9 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
                 choices.append(nextVal)
 
     if choices == []:
+
         return getEvaluationValue(newState) # TODO or None?
+
 
     if ownTurn:
         return max(choices)
@@ -262,6 +227,23 @@ def minimaxMovement(state, turnsLeft, turns):
         return None
     return getRandMax(choices)[1]
 
+
+def noobMovement(state, turnsLeft, turns):
+    choices = []
+    if turns == MOVEMENT_ONE - 1: # end of first moving stage (going to 6x6)
+        state.shrink(1)
+    if turns == MOVEMENT_TWO - 1: # end of second moving stage (going to 4x4)
+        state.shrink(2)
+
+    for move in getMoves(state):
+        choices.append(move)
+
+    if choices == []:
+        return None
+    # return random.choice(choices)
+    return random.choice(choices)
+
+
 def getRandMin(tupList):
     smallestVal = min(tupList)[0]
     return random.choice([tup for tup in tupList if tup[0] == smallestVal])
@@ -270,44 +252,7 @@ def getRandMax(tupList):
     smallestVal = max(tupList)[0]
     return random.choice([tup for tup in tupList if tup[0] == smallestVal])
 
-
-# # returns integer value representing utility value
-# def getPlaceValue(place, ownTurn, state, turnsLeft):
-#     # just implement for moving stage first
-#
-#     # if ownTurn is True, get max.
-#     newWhitePieces = state.whitePieces.copy()
-#     newBlackPieces = state.blackPieces.copy()
-#
-#     if state.isWhiteTurn:
-#         newWhitePieces.add(place)
-#     else:
-#         newBlackPieces.add(place)
-#
-#     newState = GameState(state.size,
-#                          newWhitePieces,
-#                          newBlackPieces,
-#                          state.isWhitePlayer,
-#                          not state.isWhiteTurn)
-#
-#     # run check if anything eaten, priority determined by turn
-#     removeEatenPieces(newState, not newState.isWhiteTurn)
-#     removeEatenPieces(newState, newState.isWhiteTurn)
-#
-#     #newState.printBoard()
-#
-#     if turnsLeft == 0 or newState.isEndState():
-#         return getEvaluationValue(newState)
-#
-#     choices = []
-#     for place in getPlaces(newState):
-#         choices.append((getPlaceValue(place, not ownTurn, newState, turnsLeft-1)))
-#
-#     if ownTurn:
-#         return max(choices)
-#     return min(choices)
-#
-
+# only used in placing phase.
 def getPlaces(state):
     placeList = []
     # If it is white's turn, it means we can only put in white's starting zone.
@@ -366,9 +311,10 @@ def weakestQuadrant(state):
 
 
 # Function that is meant to make good placements.
-def heurPlacement(state):
+def heurPlacement(player):
+    state = player.state
+
     availableCells = getPlaces(state)
-    # Determine weakest quadrant.
     weakestQuad = weakestQuadrant(state)
 
     # First, we prioritize kills.
@@ -378,9 +324,7 @@ def heurPlacement(state):
         if killValue(state,cell)>0:
             killList.append((killValue,cell))
     # From cells that result in kills, we choose a random cell with max kills.
-    # TODO: Implement distance to centre calculation for both kills and control style of play????
     if len(killList)>0:
-        print("KIIIIILLLLILLLLLL")
         # Prune the current killList so it only contains entries with max killValue.
         killList2 = []
         maxKillValue, cell = max(killList)
@@ -404,6 +348,14 @@ def heurPlacement(state):
     # if we reach here, no kills possible.
     # If we can't kill, we just play for control.
     controlList = []
+    nonAllowedList = enemyControlledCells(player.state)
+    
+    # Set of coords we can place pieces that will result in them instantly dying. 
+    instantDeathCoords = instantDeathPlacement(state, availableCells)
+    for cell in instantDeathCoords:
+        if cell not in nonAllowedList:
+            nonAllowedList.append(cell)
+
     # Construct a list for control evaluation.
     for cell in availableCells:
         controlList.append((controlValue(state,cell), cell))
@@ -412,13 +364,13 @@ def heurPlacement(state):
     # Construct a list that only holds coords with best control score at this point.
     controlList2 = []
     for entry in controlList:
-        if entry[0] is maxControlScore:
+        if entry[0] is maxControlScore and entry[0] not in nonAllowedList:
             controlList2.append(entry)
 
     # Prune controlList further to only include coords in weakest quadrant.
     controlList3 = []
     for entry in controlList2:
-        if entry[1] in weakestQuad:
+        if entry[1] in weakestQuad and entry[1] not in nonAllowedList:
             controlList3.append(entry[1])
     # If not possible to control maxControl number of cells by placing in weakest quadrant,
     # then we disregard quadrant analysis and place it on random cell that returns most control.
@@ -427,6 +379,30 @@ def heurPlacement(state):
         return returnEntry[1]
     else:
         return random.choice(controlList3)
+
+# Function that takes a state and returns list of cells that, if we place a piece, allows opponent to instantly kill that piece. 
+def enemyControlledCells(state):
+    enemyPieces = state.enemyPieces()
+    allyPieces = state.allyPieces()
+    nonAllowedList = []
+    for coord in enemyPieces:
+        coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
+        for coord1,coord2 in coordPairsToCheck:
+            if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty_(coord1[0], coord1[1]) and state.isEmpty_(coord2[0], coord2[0]):
+                nonAllowedList.append(coord1)
+    return nonAllowedList
+
+# Function that takes a state and list of already non allowed cells, and returns cells that will instantly get us killed, without opponent doing anything
+# if we place a piece there. 
+def instantDeathPlacement(state, placeList):
+    enemyPieces = state.enemyPieces()
+    toRemove = set()
+    for cell in placeList:
+        coordPairsToCheck = ((up(cell), down(cell)), (left(cell), right(cell)))
+        for coord1, coord2 in coordPairsToCheck:
+            if inBoardRange(coord1) and inBoardRange(coord2) and (coord1 in enemyPieces) and (coord2 in enemyPieces):
+                toRemove.add(cell)
+    return toRemove
 
 # We control an adjacent cell if the next one in that direction is not enemy cell, or not out of bounds
 # That first adjacent cell has to be empty.

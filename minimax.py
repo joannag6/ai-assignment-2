@@ -252,6 +252,7 @@ def getRandMax(tupList):
     smallestVal = max(tupList)[0]
     return random.choice([tup for tup in tupList if tup[0] == smallestVal])
 
+# only used in placing phase.
 def getPlaces(state):
     placeList = []
     # If it is white's turn, it means we can only put in white's starting zone.
@@ -348,7 +349,12 @@ def heurPlacement(player):
     # If we can't kill, we just play for control.
     controlList = []
     nonAllowedList = enemyControlledCells(player.state)
-
+    
+    # Set of coords we can place pieces that will result in them instantly dying. 
+    instantDeathCoords = instantDeathPlacement(state, availableCells)
+    for cell in instantDeathCoords:
+        if cell not in nonAllowedList:
+            nonAllowedList.append(cell)
 
     # Construct a list for control evaluation.
     for cell in availableCells:
@@ -385,6 +391,18 @@ def enemyControlledCells(state):
             if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty_(coord1[0], coord1[1]) and state.isEmpty_(coord2[0], coord2[0]):
                 nonAllowedList.append(coord1)
     return nonAllowedList
+
+# Function that takes a state and list of already non allowed cells, and returns cells that will instantly get us killed, without opponent doing anything
+# if we place a piece there. 
+def instantDeathPlacement(state, placeList):
+    enemyPieces = state.enemyPieces()
+    toRemove = set()
+    for cell in placeList:
+        coordPairsToCheck = ((up(cell), down(cell)), (left(cell), right(cell)))
+        for coord1, coord2 in coordPairsToCheck:
+            if inBoardRange(coord1) and inBoardRange(coord2) and (coord1 in enemyPieces) and (coord2 in enemyPieces):
+                toRemove.add(cell)
+    return toRemove
 
 # We control an adjacent cell if the next one in that direction is not enemy cell, or not out of bounds
 # That first adjacent cell has to be empty.

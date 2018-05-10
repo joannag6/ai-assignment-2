@@ -312,6 +312,8 @@ def weakestQuadrant(state):
 
 # Function that is meant to make good placements.
 def heurPlacement(player):
+    if player.isWhite and player.turns is 0:
+        return (3,4)
     state = player.state
 
     availableCells = getPlaces(state)

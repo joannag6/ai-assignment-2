@@ -163,11 +163,11 @@ def getMoves(state):
     if state.isWhiteTurn:
         # print("white Pieces: " + str(state.whitePieces))
         for piece in state.whitePieces:
-            moveList += state.calcMovesForCoord(piece)
+            moveList += state.calcMovesForCoord(piece, state.blackPieces)
     else:
         # print("Black Piece: " + str(state.blackPieces))
         for piece in state.blackPieces:
-            moveList += state.calcMovesForCoord(piece)
+            moveList += state.calcMovesForCoord(piece, state.whitePieces)
     # print(moveList)
     # print("*")
 
@@ -257,16 +257,10 @@ def minimaxMovement(state, turnsLeft, turns):
 
     for move in getMoves(state):
         choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1, None, None), move))
-        # TODO
-        # choices.append(move)
-    # print(choices)
 
     if choices == []:
         return None
-    # return random.choice(choices)
     return getRandMax(choices)[1]
-    # TODO
-    # return getRandMax(choices)
 
 def getRandMin(tupList):
     smallestVal = min(tupList)[0]
@@ -443,7 +437,7 @@ def controlValue(state, coord):
     controlScore = 0
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
-        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty(coord1) and not state.isEnemy(enemyPieces,coord2):
+        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty_(coord1[0], coord1[1]) and not state.isEnemy(enemyPieces,coord2):
             controlScore += 1
     return controlScore
 

@@ -72,7 +72,7 @@ class GameState:
                      self.canGoLeft_(i, j),
                      self.canGoUp_(i, j),
                      self.canGoDown_(i, j)]:
-            if move and len(canEat(self, enemy, [move])) == 0:
+            if move and not canEat(self, enemy, [move]): # no suicides
                 moveList.append((coord, move))
         return moveList
 

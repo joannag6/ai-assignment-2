@@ -183,14 +183,23 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
     if turnsLeft == 0 or newState.isEndState():
         return getEvaluationValue(newState)
 
+
     choices = []
     for nextMove in getMoves(newState):
         nextVal = getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns+1, alpha, beta)
+
+        # newState.printBoard()
+        # print(nextMove)
+        # print("alpha: " + str(alpha))
+        # print("beta: " + str(beta))
+        # print("this val: " + str(nextVal))
+
         if ownTurn:
             if beta == None:
                 beta = nextVal
                 choices.append(nextVal)
             elif nextVal >= beta:
+                print("CUT")
                 return nextVal
             else:
                 choices.append(nextVal)
@@ -199,6 +208,7 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
                 alpha = nextVal
                 choices.append(nextVal)
             elif nextVal <= alpha:
+                print("CUT")
                 return nextVal
             else:
                 choices.append(nextVal)
@@ -349,8 +359,8 @@ def heurPlacement(player):
     # If we can't kill, we just play for control.
     controlList = []
     nonAllowedList = enemyControlledCells(player.state)
-    
-    # Set of coords we can place pieces that will result in them instantly dying. 
+
+    # Set of coords we can place pieces that will result in them instantly dying.
     instantDeathCoords = instantDeathPlacement(state, availableCells)
     for cell in instantDeathCoords:
         if cell not in nonAllowedList:
@@ -380,7 +390,7 @@ def heurPlacement(player):
     else:
         return random.choice(controlList3)
 
-# Function that takes a state and returns list of cells that, if we place a piece, allows opponent to instantly kill that piece. 
+# Function that takes a state and returns list of cells that, if we place a piece, allows opponent to instantly kill that piece.
 def enemyControlledCells(state):
     enemyPieces = state.enemyPieces()
     allyPieces = state.allyPieces()
@@ -393,7 +403,7 @@ def enemyControlledCells(state):
     return nonAllowedList
 
 # Function that takes a state and list of already non allowed cells, and returns cells that will instantly get us killed, without opponent doing anything
-# if we place a piece there. 
+# if we place a piece there.
 def instantDeathPlacement(state, placeList):
     enemyPieces = state.enemyPieces()
     toRemove = set()

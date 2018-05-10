@@ -35,7 +35,7 @@ class Player:
         nextMove = None # if passing turn
 
         if self.placingPhase:
-            nextMove = heurPlacement(self.state)
+            nextMove = heurPlacement(self)
         else:
             nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
         # Increments the number of turns that have happened, since an action took place.
@@ -310,9 +310,10 @@ def weakestQuadrant(state):
 
 
 # Function that is meant to make good placements.
-def heurPlacement(state):
+def heurPlacement(player):
+    state = player.state
+
     availableCells = getPlaces(state)
-    # Determine weakest quadrant.
     weakestQuad = weakestQuadrant(state)
 
     # First, we prioritize kills.
@@ -322,7 +323,6 @@ def heurPlacement(state):
         if killValue(state,cell)>0:
             killList.append((killValue,cell))
     # From cells that result in kills, we choose a random cell with max kills.
-    # TODO: Implement distance to centre calculation for both kills and control style of play????
     if len(killList)>0:
         # Prune the current killList so it only contains entries with max killValue.
         killList2 = []
@@ -347,6 +347,9 @@ def heurPlacement(state):
     # if we reach here, no kills possible.
     # If we can't kill, we just play for control.
     controlList = []
+    nonAllowedList = enemyControlledCells(player.state)
+
+
     # Construct a list for control evaluation.
     for cell in availableCells:
         controlList.append((controlValue(state,cell), cell))
@@ -355,13 +358,13 @@ def heurPlacement(state):
     # Construct a list that only holds coords with best control score at this point.
     controlList2 = []
     for entry in controlList:
-        if entry[0] is maxControlScore:
+        if entry[0] is maxControlScore and entry[0] not in nonAllowedList:
             controlList2.append(entry)
 
     # Prune controlList further to only include coords in weakest quadrant.
     controlList3 = []
     for entry in controlList2:
-        if entry[1] in weakestQuad:
+        if entry[1] in weakestQuad and entry[1] not in nonAllowedList:
             controlList3.append(entry[1])
     # If not possible to control maxControl number of cells by placing in weakest quadrant,
     # then we disregard quadrant analysis and place it on random cell that returns most control.
@@ -370,6 +373,18 @@ def heurPlacement(state):
         return returnEntry[1]
     else:
         return random.choice(controlList3)
+
+# Function that takes a state and returns list of cells that, if we place a piece, allows opponent to instantly kill that piece. 
+def enemyControlledCells(state):
+    enemyPieces = state.enemyPieces()
+    allyPieces = state.allyPieces()
+    nonAllowedList = []
+    for coord in enemyPieces:
+        coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
+        for coord1,coord2 in coordPairsToCheck:
+            if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty_(coord1[0], coord1[1]) and state.isEmpty_(coord2[0], coord2[0]):
+                nonAllowedList.append(coord1)
+    return nonAllowedList
 
 # We control an adjacent cell if the next one in that direction is not enemy cell, or not out of bounds
 # That first adjacent cell has to be empty.

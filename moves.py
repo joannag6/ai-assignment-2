@@ -1,9 +1,31 @@
-# Some functions from Part A, modified to fit Part B's requirements
-# Also contains newly written helper functions, related to cell operations and movement.
+"""COMP30024 Artificial Intelligence Project Part B (2018 Sem 1)
+
+Authors:
+Joanna Grace Cho Ern LEE (710094)
+Jia Shun LOW (743436)
+
+This module contains some functions from Part A, modified to fit Part B's
+requirements, as well as newly written helper functions, related to cell
+operations and movements. These functions are designed to be used in the
+Minimax module.
+"""
 START_PHASE = 0
 INITIAL_BOARD_SIZE = 8
 STARTING_LINE = 2
-
+PLACEMENT_LINE = 2
+STARTING_PIECES = 12
+LOOKAHEAD_MOVE = 3
+MOVEMENT_ONE = 128
+MOVEMENT_TWO = 192
+BEST_STARTING_COORD = (3,4)
+QUAD_ONE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
+                   for y in range(INITIAL_BOARD_SIZE//2)]
+QUAD_TWO = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
+                   for y in range(INITIAL_BOARD_SIZE//2)]
+QUAD_THREE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
+                     for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
+QUAD_FOUR = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
+                    for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
 
 class GameState:
     """

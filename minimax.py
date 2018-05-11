@@ -359,12 +359,8 @@ def heurPlacement(player):
         for entry in killList:
             if entry[0] == maxKillValue:
                 killList2.append(entry)
-<<<<<<< HEAD
         # Prune the current killList so it only contains entries in weakest quadrant.
-=======
-        returnEntry = random.choice(killList2)
-        # Prune the current killList to only contain weakest quadrant entries.
->>>>>>> f26c52de3736e0657ebf7023636c6523aa93442c
+
         killList3 = []
         for entry in killList2:
             if entry[1] in weakestQuad:

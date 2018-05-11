@@ -215,8 +215,9 @@ def removeEatenPieces(state, eatWhite):
         toEatPieces.remove(pieceToRemove)
     return toEatPieces
 
-# Functions that return coord of cells up down left right,
-# does not check for board range.
+###############################################################################
+#           Functions that return coord of cells up down left right           #
+###############################################################################
 def up(coord):
     x,y = coord
     return x,y-1
@@ -230,8 +231,9 @@ def right(coord):
     x,y = coord
     return x+1, y
 
-# Functions that return coord of cells that are two up, down,
-# left, right. Does not check for board range.
+###############################################################################
+#         Functions that return coord of cells two up down left right         #
+###############################################################################
 def twoUp(coord):
     x,y = coord
     return x,y-2

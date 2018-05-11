@@ -282,19 +282,11 @@ def getPlaces(state):
     placeList = []
     for x in range(INITIAL_BOARD_SIZE):
         for y in yRange:
-<<<<<<< HEAD
             coord = (x,y)
             if (coord not in state.whitePieces and coord not in state.blackPieces
                     and not state.isCorner(x, y)):
                 placeList.append(coord)
-    print(placeList)
-    #print(placeList)
-=======
-            coord = (x, y)
-            if (coord not in state.whitePieces and
-                coord not in state.blackPieces and not state.isCorner(x, y)):
-                    placeList.append(coord)
->>>>>>> f26c52de3736e0657ebf7023636c6523aa93442c
+
     return placeList
 
 

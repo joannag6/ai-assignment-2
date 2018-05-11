@@ -72,14 +72,14 @@ class Player:
 
         if self.placingPhase:
             # update placement
-            print("selfupdating placement")
-            print(self.state.whitePieces)
-            print(self.state.blackPieces)
+            # print("selfupdating placement")
+            # print(self.state.whitePieces)
+            # print(self.state.blackPieces)
             print(action)
             self.updatePlacement(action)
-            print(self.state.whitePieces)
-            print(self.state.blackPieces)
-            print("done")
+            # print(self.state.whitePieces)
+            # print(self.state.blackPieces)
+            # print("done")
         else:
             # update movement
             self.updateMovement(action)
@@ -115,13 +115,13 @@ class Player:
         if self.placingPhase:
             # update placement
             print("updating placement")
-            print(self.state.whitePieces)
-            print(self.state.blackPieces)
-            print(action)
+            # print(self.state.whitePieces)
+            # print(self.state.blackPieces)
+            # print(action)
             self.updatePlacement(action)
-            print(self.state.whitePieces)
-            print(self.state.blackPieces)
-            print("done")
+            # print(self.state.whitePieces)
+            # print(self.state.blackPieces)
+            # print("done")
         else:
             # update movement
             self.updateMovement(action)
@@ -396,8 +396,8 @@ def getKillControlValue(state, coord):
     for coord1,coord2 in coordPairsToCheck:
         x1, y1 = coord1
         x2, y2 = coord2
-        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEmpty_(x1, y1) and not state.isEnemy(coord2):
+        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEmpty_(x1, y1) and not state.isEnemyOrCorner(coord2):
             controlScore += 1
-        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEnemy(coord1) and state.isAlly(coord2):
+        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEnemyOrCorner(coord1) and state.isAlly(coord2):
             killValue+=1
     return killValue, controlScore

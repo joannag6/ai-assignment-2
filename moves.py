@@ -59,8 +59,8 @@ class GameState:
         self.size = INITIAL_BOARD_SIZE - 2*newPhase
         self.whitePieces = self.removeOutOfBounds(self.whitePieces)
         self.blackPieces = self.removeOutOfBounds(self.blackPieces)
-        removeEatenPieces(self, True)
-        removeEatenPieces(self, False)
+        self.whitePieces = removeEatenPieces(self, True)
+        self.blackPieces = removeEatenPieces(self, False)
 
     def isEndState(self):
         """
@@ -160,11 +160,16 @@ class GameState:
                 (min(self.corners) <= j <= max(self.corners)) and
                 not self.isCorner(i, j))
 
-    def isEnemy(self, coordinate):
+    def isEnemy(self, enemyPieces, coordinate):
         """Checks if coordinates belong to the enemy (or is a corner)."""
         i, j = coordinate
         return (self.withinBounds(i, j) and
-                (coordinate in self.enemyPieces() or self.isCorner(i, j)))
+                (coordinate in enemyPieces or self.isCorner(i, j)))
+
+    def isEnemyOrCorner(self, coordinate):
+        """Checks if coordinates belong to the enemy (or is a corner)."""
+        i, j = coordinate
+        return coordinate in self.enemyPieces() or self.isCorner(i, j)
 
     def isAlly(self, coordinate):
         """Checks if coordinates belong to ally"""
@@ -174,7 +179,7 @@ class GameState:
 
     def canEatSide(self, enemyPieces, side1, side2):
         """Checks a piece between side1 and side2 will be eaten."""
-        return self.isEnemy(side1) and self.isEnemy(side2)
+        return self.isEnemy(enemyPieces, side1) and self.isEnemy(enemyPieces, side2)
 
     def enemyPieces(self):
         """Gets enemy pieces based on player colour"""
@@ -204,11 +209,11 @@ def getEaten(state, eatingPieces, toEatPieces):
 def removeEatenPieces(state, eatWhite):
     """Given both sets of coordinates, remove own eaten pieces."""
     if eatWhite: # priority to eating blackPieces
-        toEatPieces = state.whitePieces
-        eatingPieces = state.blackPieces
+        toEatPieces = state.whitePieces.copy()
+        eatingPieces = state.blackPieces.copy()
     else:
-        toEatPieces = state.blackPieces
-        eatingPieces = state.whitePieces
+        toEatPieces = state.blackPieces.copy()
+        eatingPieces = state.whitePieces.copy()
 
     toRemove = getEaten(state, eatingPieces, toEatPieces)
     for pieceToRemove in toRemove:

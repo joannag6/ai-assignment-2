@@ -72,14 +72,7 @@ class Player:
 
         if self.placingPhase:
             # update placement
-            # print("selfupdating placement")
-            # print(self.state.whitePieces)
-            # print(self.state.blackPieces)
-            print(action)
             self.updatePlacement(action)
-            # print(self.state.whitePieces)
-            # print(self.state.blackPieces)
-            # print("done")
         else:
             # update movement
             self.updateMovement(action)
@@ -114,14 +107,7 @@ class Player:
 
         if self.placingPhase:
             # update placement
-            print("updating placement")
-            # print(self.state.whitePieces)
-            # print(self.state.blackPieces)
-            # print(action)
             self.updatePlacement(action)
-            # print(self.state.whitePieces)
-            # print(self.state.blackPieces)
-            # print("done")
         else:
             # update movement
             self.updateMovement(action)

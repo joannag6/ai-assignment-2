@@ -16,7 +16,7 @@ CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 def noobPlacement(state):
     choices = []
     x = getPlaces(state)
-    return random.choice(x)
+    return random.choice(x) #max(choices)[1]
 
 def noobMovement(state, turnsLeft, turns):
     choices = []

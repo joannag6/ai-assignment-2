@@ -267,8 +267,9 @@ def getPlaces(state):
         for y in yRange:
             coord = (x,y)
             if (coord not in state.whitePieces and coord not in state.blackPieces
-                    and not state.isCorner(coord[0], coord[1])):
+                    and not state.isCorner(x, y)):
                 placeList.append(coord)
+    print(placeList)
     return placeList
 
 def weakestQuadrant(state):
@@ -308,12 +309,17 @@ def heurPlacement(player):
 
     # First, we prioritize kills.
     killList = []
+    controlList = []
+
     # Construct a list of cells that can result in kills.
     for cell in availableCells:
-        if killValue(state,cell)>0:
+        killValue, controlValue = getKillControlValue(state, cell)
+        if killValue > 0:
             killList.append((killValue,cell))
+        controlList.append((controlValue, cell)) # Construct a list for control evaluation.
+
     # From cells that result in kills, we choose a random cell with max kills.
-    if len(killList)>0:
+    if len(killList) > 0:
         # Prune the current killList so it only contains entries with max killValue.
         killList2 = []
         maxKillValue, cell = max(killList)
@@ -336,19 +342,16 @@ def heurPlacement(player):
 
     # if we reach here, no kills possible.
     # If we can't kill, we just play for control.
-    controlList = []
     nonAllowedList = enemyControlledCells(player.state)
 
     # Set of coords we can place pieces that will result in them instantly dying.
-    instantDeathCoords = instantDeathPlacement(state, availableCells)
+    instantDeathCoords = getEaten(state, state.enemyPieces(), availableCells)#instantDeathPlacement(state, availableCells)
+
     for cell in instantDeathCoords:
         if cell not in nonAllowedList:
             nonAllowedList.append(cell)
 
-    # Construct a list for control evaluation.
-    for cell in availableCells:
-        controlList.append((controlValue(state,cell), cell))
-    maxControlScore,maxControlCoord = max(controlList)
+    maxControlScore, maxControlCoord = max(controlList)
 
     # Construct a list that only holds coords with best control score at this point.
     controlList2 = []
@@ -372,29 +375,18 @@ def heurPlacement(player):
 # Function that takes a state and returns list of cells that, if we place a piece, allows opponent to instantly kill that piece.
 def enemyControlledCells(state):
     enemyPieces = state.enemyPieces()
-    allyPieces = state.allyPieces()
     nonAllowedList = []
     for coord in enemyPieces:
         coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
         for coord1,coord2 in coordPairsToCheck:
-            if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty_(coord1[0], coord1[1]) and state.isEmpty_(coord2[0], coord2[0]):
+            x1, y1 = coord1
+            x2, y2 = coord2
+            if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEmpty_(x1, y1) and state.isEmpty_(x2, y2):
                 nonAllowedList.append(coord1)
     return nonAllowedList
 
-# Function that takes a state and list of already non allowed cells, and returns cells that will instantly get us killed, without opponent doing anything
-# if we place a piece there.
-def instantDeathPlacement(state, placeList):
-    enemyPieces = state.enemyPieces()
-    toRemove = set()
-    for cell in placeList:
-        coordPairsToCheck = ((up(cell), down(cell)), (left(cell), right(cell)))
-        for coord1, coord2 in coordPairsToCheck:
-            if inBoardRange(coord1) and inBoardRange(coord2) and (coord1 in enemyPieces) and (coord2 in enemyPieces):
-                toRemove.add(cell)
-    return toRemove
 
-
-def controlValue(state, coord):
+def getKillControlValue(state, coord):
     """
     We control an adjacent cell if the next one in that direction is not enemy
     cell, or not out of bounds. That first adjacent cell has to be empty.
@@ -403,23 +395,14 @@ def controlValue(state, coord):
     """
     enemyPieces = state.enemyPieces()
     allyPieces = state.allyPieces()
+    killValue = 0
     controlScore = 0
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
-        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty_(coord1[0], coord1[1]) and not state.isEnemy(enemyPieces,coord2):
+        x1, y1 = coord1
+        x2, y2 = coord2
+        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEmpty_(x1, y1) and not state.isEnemy(coord2):
             controlScore += 1
-    return controlScore
-
-
-def killValue(state, coord):
-    """Returns number of kills that can result from placing a piece on a particular cell."""
-    enemyPieces = state.enemyPieces()
-    allyPieces = state.allyPieces()
-    killValue = 0
-    # if adjacent coords contain enemy and one more cell in that
-    # direction contains ally piece, we can eliminate that enemy.
-    coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
-    for coord1,coord2 in coordPairsToCheck:
-        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEnemy(enemyPieces, coord1) and state.isAlly(allyPieces, coord2):
+        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEnemy(coord1) and state.isAlly(coord2):
             killValue+=1
-    return killValue
+    return killValue, controlScore

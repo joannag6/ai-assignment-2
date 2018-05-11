@@ -3,7 +3,7 @@ from moves import *
 
 PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD_MOVE = 5
+LOOKAHEAD_MOVE = 4
 MOVEMENT_ONE = 128
 MOVEMENT_TWO = 192
 QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)]
@@ -184,8 +184,12 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
         return getEvaluationValue(newState)
 
 
-    choices = []
-    for nextMove in getMoves(newState):
+    # choices = []
+    possibleMoves = getMoves(newState)
+    for nextMove in possibleMoves:
+        # if ownTurn: alpha = None
+        # else: beta = None
+
         nextVal = getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns+1, alpha, beta)
 
         # newState.printBoard()
@@ -194,33 +198,36 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
         # print("beta: " + str(beta))
         # print("this val: " + str(nextVal))
 
-        if ownTurn:
-            if beta == None:
-                beta = nextVal
-                choices.append(nextVal)
-            elif nextVal >= beta:
-                print("CUT")
-                return nextVal
-            else:
-                choices.append(nextVal)
-        if not ownTurn:
-            if alpha == None:
-                alpha = nextVal
-                choices.append(nextVal)
-            elif nextVal <= alpha:
-                print("CUT")
-                return nextVal
-            else:
-                choices.append(nextVal)
+        if alpha != None and beta != None and beta <= alpha:
+           return nextVal
 
-    if choices == []:
+        if ownTurn:
+            if alpha == None or nextVal >= alpha:
+                alpha = nextVal
+                # choices.append(nextVal)
+                # elif nextVal >= alpha:
+                # print("CUT")
+                # return nextVal
+                # else:
+                # choices.append(nextVal)
+        if not ownTurn:
+            if beta == None or nextVal <= beta:
+                beta = nextVal
+                # choices.append(nextVal)
+                # elif nextVal <= beta:
+                # print("CUT")
+                # return nextVal
+                # else:
+                # choices.append(nextVal)
+
+    if not possibleMoves:
 
         return getEvaluationValue(newState) # TODO or None?
 
 
     if ownTurn:
-        return max(choices)
-    return min(choices)
+        return alpha#max(choices)
+    return beta#min(choices)
 
 
 def minimaxMovement(state, turnsLeft, turns):
@@ -231,7 +238,7 @@ def minimaxMovement(state, turnsLeft, turns):
         state.shrink(2)
 
     for move in getMoves(state):
-        choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1, None, None), move))
+        choices.append((getMoveValue(move, False, state, turnsLeft-1, turns+1, None, None), move))
 
     if choices == []:
         return None

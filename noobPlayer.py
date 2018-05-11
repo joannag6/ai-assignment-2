@@ -1,24 +1,27 @@
+"""COMP30024 Artificial Intelligence Project Part B (2018 Sem 1)
+
+Authors:
+Joanna Grace Cho Ern LEE (710094)
+Jia Shun LOW (743436)
+
+This module contains the Player class and all the accompanying functions needed
+to play the Watch Your Back game, utilising basic algorithms.
+"""
+
 import random
 from moves import *
 from minimax import *
 
-PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD_MOVE = 5
 MOVEMENT_ONE = 128
 MOVEMENT_TWO = 192
-QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)]
-QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
-QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
-QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
-CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 
 def noobPlacement(state):
     choices = []
     x = getPlaces(state)
     return random.choice(x) #max(choices)[1]
 
-def noobMovement(state, turnsLeft, turns):
+def noobMovement(state, turns):
     choices = []
     if turns == MOVEMENT_ONE - 1: # end of first moving stage (going to 6x6)
         state.shrink(1)
@@ -36,7 +39,8 @@ class Player:
     def __init__(self, colour):
         self.colour = colour
         self.isWhite = True if self.colour == "white" else False
-        self.state = GameState(INITIAL_BOARD_SIZE, set(), set(), self.isWhite, self.isWhite)
+        self.state = GameState(INITIAL_BOARD_SIZE, set(), set(),
+                               self.isWhite, self.isWhite)
         self.placingPhase = True
         self.turns = 0
 
@@ -57,9 +61,9 @@ class Player:
         if self.placingPhase:
             nextMove = noobPlacement(self.state)
         else:
-            nextMove = noobMovement(self.state, LOOKAHEAD_MOVE, turns)
+            nextMove = noobMovement(self.state, turns)
 
-        # Increments the number of turns that have happened, since an action took place.
+        # Increments the number of turns that have happened
         self.turns += 1
 
         self.selfUpdate(nextMove)
@@ -98,9 +102,11 @@ class Player:
 
         if not self.placingPhase:
             # Code that implements shrinking.
-            if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+            if self.turns == MOVEMENT_ONE:
+                # end of first moving stage (going to 6x6)
                 self.state.shrink(1)
-            if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+            if self.turns == MOVEMENT_TWO:
+                # end of second moving stage (going to 4x4)
                 self.state.shrink(2)
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
@@ -133,18 +139,19 @@ class Player:
 
         if not self.placingPhase:
             # Code that implements shrinking.
-            if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-
+            if self.turns == MOVEMENT_ONE:
+                # end of first moving stage (going to 6x6)
                 self.state.shrink(1)
 
-            if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+            if self.turns == MOVEMENT_TWO:
+                # end of second moving stage (going to 4x4)
                 self.state.shrink(2)
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
         removeEatenPieces(self.state, self.state.isWhiteTurn)
 
-        # When black makes 24th move, white's self.turns == 24 after the increment in update().
-        # Then, after the code for update reaches this point, we have to toggle white's placingPhase
-        # to False.
+        # When black makes 24th move, white's self.turns == 24 after the
+        # increment in update(). Then, after the code for update reaches this
+        # point, we have to toggle white's placingPhase to False.
         if self.placingPhase and self.turns >= STARTING_PIECES*2:
             self.placingPhase = False

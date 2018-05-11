@@ -44,8 +44,8 @@ class Player:
         if self.placingPhase:
             nextMove = heurPlacement(self)
         else:
-            nextMove = minimaxMovement(self.state, LOOKAHEAD_MOVE, turns)
-        # Increments the number of turns that have happened, since an action took place.
+            nextMove = minimaxMovement(self.state, DEPTH, turns)
+        # Increments the internal number of turns, since an action took place.
         self.turns += 1
 
         self.selfUpdate(nextMove)
@@ -78,11 +78,11 @@ class Player:
             self.updateMovement(action)
 
         if not self.placingPhase:
-            # Code that implements shrinking.
-            if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+            if self.turns == MOVEMENT_ONE:
+                # end of first moving stage (going to 6x6)
                 self.state.shrink(1)
-
-            if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+            elif self.turns == MOVEMENT_TWO:
+                # end of second moving stage (going to 4x4)
                 self.state.shrink(2)
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
@@ -93,8 +93,8 @@ class Player:
 
 
     def update(self, action):
-        self.turns += 1
         """Update internal game state according to opponent's action"""
+        self.turns += 1
 
         if action == None:
             return
@@ -113,9 +113,11 @@ class Player:
             self.updateMovement(action)
 
         if not self.placingPhase:
-            if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+            if self.turns == MOVEMENT_ONE:
+                # end of first moving stage (going to 6x6)
                 self.state.shrink(1)
-            if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
+            elif self.turns == MOVEMENT_TWO:
+                # end of second moving stage (going to 4x4)
                 self.state.shrink(2)
 
         removeEatenPieces(self.state, not self.state.isWhiteTurn)
@@ -148,9 +150,9 @@ def getEvaluationValue(state):
 
 def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
     """
-    Returns integer value representing evaluation value for that move. If own turn,
-    get the maximum possible value. If not own turn, get minimum possible value.
-    Also practices alpha beta pruning.
+    Returns integer value representing evaluation value for that move. If own
+    turn, get the maximum possible value. If not own turn, get minimum possible
+    value. Also practices alpha beta pruning.
     """
 
     newWhitePieces = state.whitePieces.copy()
@@ -321,8 +323,8 @@ def heurPlacement(player):
     # If we can't kill, we just play for control.
     nonAllowedList = enemyControlledCells(player.state)
 
-    # Set of coords we can place pieces that will result in them instantly dying.
-    instantDeathCoords = getEaten(state, state.enemyPieces(), availableCells)#instantDeathPlacement(state, availableCells)
+    # Set of coords we can place pieces that will result in them instantly dying
+    instantDeathCoords = getEaten(state, state.enemyPieces(), availableCells)
 
     for cell in instantDeathCoords:
         if cell not in nonAllowedList:
@@ -330,7 +332,7 @@ def heurPlacement(player):
 
     maxControlScore, maxControlCoord = max(controlList)
 
-    # Construct a list that only holds coords with best control score at this point.
+    # Construct a list that only holds coords with best control score
     controlList2 = []
     for entry in controlList:
         if entry[0] is maxControlScore and entry[0] not in nonAllowedList:
@@ -341,8 +343,10 @@ def heurPlacement(player):
     for entry in controlList2:
         if entry[1] in weakestQuad and entry[1] not in nonAllowedList:
             controlList3.append(entry[1])
-    # If not possible to control maxControl number of cells by placing in weakest quadrant,
-    # then we disregard quadrant analysis and place it on random cell that returns most control.
+
+    # If not possible to control maxControl number of cells by placing in
+    # weakest quadrant, then we disregard quadrant analysis and place it on
+    # random cell that returns most control.
     if len(controlList3) == 0:
         returnEntry = random.choice(controlList2)
         return returnEntry[1]
@@ -358,12 +362,16 @@ def enemyControlledCells(state):
     enemyPieces = state.enemyPieces()
     nonAllowedList = []
     for coord in enemyPieces:
-        coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
+        coordPairsToCheck = ((up(coord), twoUp(coord)),
+                             (down(coord), twoDown(coord)),
+                             (left(coord),twoLeft(coord)),
+                             (right(coord), twoRight(coord)))
         for coord1,coord2 in coordPairsToCheck:
             x1, y1 = coord1
             x2, y2 = coord2
-            if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEmpty_(x1, y1) and state.isEmpty_(x2, y2):
-                nonAllowedList.append(coord1)
+            if (state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and
+                state.isEmpty_(x1, y1) and state.isEmpty_(x2, y2)):
+                    nonAllowedList.append(coord1)
     return nonAllowedList
 
 
@@ -378,12 +386,17 @@ def getKillControlValue(state, coord):
     allyPieces = state.allyPieces()
     killValue = 0
     controlScore = 0
-    coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
+    coordPairsToCheck = ((up(coord), twoUp(coord)),
+                         (down(coord), twoDown(coord)),
+                         (left(coord),twoLeft(coord)),
+                         (right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
         x1, y1 = coord1
         x2, y2 = coord2
-        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEmpty_(x1, y1) and not state.isEnemyOrCorner(coord2):
-            controlScore += 1
-        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEnemyOrCorner(coord1) and state.isAlly(coord2):
-            killValue+=1
+        if (state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and
+            state.isEmpty_(x1, y1) and not state.isEnemyOrCorner(coord2)):
+                controlScore += 1
+        if (state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and
+            state.isEnemyOrCorner(coord1) and state.isAlly(coord2)):
+                killValue+=1
     return killValue, controlScore

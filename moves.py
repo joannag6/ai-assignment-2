@@ -14,7 +14,7 @@ INITIAL_BOARD_SIZE = 8
 STARTING_LINE = 2
 PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD_MOVE = 3
+DEPTH = 3
 MOVEMENT_ONE = 128
 MOVEMENT_TWO = 192
 BEST_STARTING_COORD = (3,4)
@@ -179,7 +179,8 @@ class GameState:
 
     def canEatSide(self, enemyPieces, side1, side2):
         """Checks a piece between side1 and side2 will be eaten."""
-        return self.isEnemy(enemyPieces, side1) and self.isEnemy(enemyPieces, side2)
+        return (self.isEnemy(enemyPieces, side1) and
+                self.isEnemy(enemyPieces, side2))
 
     def enemyPieces(self):
         """Gets enemy pieces based on player colour"""
@@ -209,11 +210,11 @@ def getEaten(state, eatingPieces, toEatPieces):
 def removeEatenPieces(state, eatWhite):
     """Given both sets of coordinates, remove own eaten pieces."""
     if eatWhite: # priority to eating blackPieces
-        toEatPieces = state.whitePieces.copy()
-        eatingPieces = state.blackPieces.copy()
+        toEatPieces = state.whitePieces
+        eatingPieces = state.blackPieces
     else:
-        toEatPieces = state.blackPieces.copy()
-        eatingPieces = state.whitePieces.copy()
+        toEatPieces = state.blackPieces
+        eatingPieces = state.whitePieces
 
     toRemove = getEaten(state, eatingPieces, toEatPieces)
     for pieceToRemove in toRemove:

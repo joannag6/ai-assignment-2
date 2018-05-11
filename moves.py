@@ -1,9 +1,31 @@
-# Some functions from Part A, modified to fit Part B's requirements
-# Also contains newly written helper functions, related to cell operations and movement.
+"""COMP30024 Artificial Intelligence Project Part B (2018 Sem 1)
+
+Authors:
+Joanna Grace Cho Ern LEE (710094)
+Jia Shun LOW (743436)
+
+This module contains some functions from Part A, modified to fit Part B's
+requirements, as well as newly written helper functions, related to cell
+operations and movements. These functions are designed to be used in the
+Minimax module.
+"""
 START_PHASE = 0
 INITIAL_BOARD_SIZE = 8
 STARTING_LINE = 2
-
+PLACEMENT_LINE = 2
+STARTING_PIECES = 12
+LOOKAHEAD_MOVE = 3
+MOVEMENT_ONE = 128
+MOVEMENT_TWO = 192
+BEST_STARTING_COORD = (3,4)
+QUAD_ONE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
+                   for y in range(INITIAL_BOARD_SIZE//2)]
+QUAD_TWO = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
+                   for y in range(INITIAL_BOARD_SIZE//2)]
+QUAD_THREE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
+                     for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
+QUAD_FOUR = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
+                    for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
 
 class GameState:
     """
@@ -31,6 +53,8 @@ class GameState:
 
     def shrink(self, newPhase):
         """Shrinks board to new size according to newPhase argument given"""
+        if self.size == INITIAL_BOARD_SIZE - 2*newPhase: return # already shrank
+
         self.corners = {newPhase,INITIAL_BOARD_SIZE-newPhase-1}
         self.size = INITIAL_BOARD_SIZE - 2*newPhase
         self.whitePieces = self.removeOutOfBounds(self.whitePieces)
@@ -126,11 +150,9 @@ class GameState:
             return (i, j+1)
         return self.canJumpDown_(i, j)
 
-
     def isCorner(self, i, j):
         """Checks if coordinates given is a corner of the board."""
         return i in self.corners and j in self.corners
-
 
     def withinBounds(self, i, j):
         """Checks if coordinates given is on the board."""
@@ -141,12 +163,14 @@ class GameState:
     def isEnemy(self, coordinate):
         """Checks if coordinates belong to the enemy (or is a corner)."""
         i, j = coordinate
-        return self.withinBounds(i, j) and coordinate in self.enemyPieces() or self.isCorner(i, j)
+        return (self.withinBounds(i, j) and
+                (coordinate in self.enemyPieces() or self.isCorner(i, j)))
 
     def isAlly(self, coordinate):
         """Checks if coordinates belong to ally"""
         i, j = coordinate
-        return self.withinBounds(i, j) and (coordinate in self.allyPieces() or self.isCorner(i, j))
+        return (self.withinBounds(i, j) and
+                (coordinate in self.allyPieces() or self.isCorner(i, j)))
 
     def canEatSide(self, enemyPieces, side1, side2):
         """Checks a piece between side1 and side2 will be eaten."""
@@ -191,8 +215,9 @@ def removeEatenPieces(state, eatWhite):
         toEatPieces.remove(pieceToRemove)
     return toEatPieces
 
-# Functions that return coord of cells up down left right,
-# does not check for board range.
+###############################################################################
+#           Functions that return coord of cells up down left right           #
+###############################################################################
 def up(coord):
     x,y = coord
     return x,y-1
@@ -206,8 +231,9 @@ def right(coord):
     x,y = coord
     return x+1, y
 
-# Functions that return coord of cells that are two up, down,
-# left, right. Does not check for board range.
+###############################################################################
+#         Functions that return coord of cells two up down left right         #
+###############################################################################
 def twoUp(coord):
     x,y = coord
     return x,y-2

@@ -68,14 +68,15 @@ class GameState:
     def calcMovesForCoord(self, coord, enemy):
         """Returns a list of all coordinates reachable from given coord."""
         i, j = coord
-        moveList = []
+        possibleMoves = set()
         for move in [self.canGoRight_(i, j),
                      self.canGoLeft_(i, j),
                      self.canGoUp_(i, j),
                      self.canGoDown_(i, j)]:
-            if move and not canEat(self, enemy, [move]): # no suicides
-                moveList.append((coord, move))
-        return moveList
+            if move: possibleMoves.add((coord, move))
+
+        # eaten = getEaten(self, enemy, possibleMoves)
+        return possibleMoves# - eaten
 
     def isEmpty_(self, i,j):
         """Checks if there are any pieces in the cell specified by (i, j)."""
@@ -150,7 +151,6 @@ class GameState:
         i, j = coordinate
         return self.withinBounds(i, j) and (coordinate in allyPieces or self.isCorner(i, j))
 
-
     def canEatSide(self, enemyPieces, side1, side2):
         """Checks a piece between side1 and side2 will be eaten."""
         return self.isEnemy(enemyPieces, side1) and self.isEnemy(enemyPieces, side2)
@@ -167,20 +167,23 @@ class GameState:
         else:
             return self.blackPieces
 
-def canEat(state, eatingPieces, toEatPieces):
-    toRemove = []
+
+def getEaten(state, eatingPieces, toEatPieces):
+    toRemove = set()
     for piece in toEatPieces:
-        i,j = piece
-        down = (i,j+1)
-        up = (i,j-1)
-        left = (i-1,j)
-        right = (i+1,j)
+        # i,j = piece
+        # down = (i,j+1)
+        # up = (i,j-1)
+        # left = (i-1,j)
+        # right = (i+1,j)
 
         # check if piece can be eaten from up and down / left and right
         # by checking if within bounds and if they are corner or white.
-        if state.canEatSide(eatingPieces, up, down) or state.canEatSide(eatingPieces, left, right):
-            toRemove.append(piece)
+        if (state.canEatSide(eatingPieces, up(piece), down(piece)) or
+            state.canEatSide(eatingPieces, left(piece), right(piece))):
+                toRemove.add(piece)
     return toRemove
+
 
 def removeEatenPieces(state, eatWhite):
     """Given both sets of coordinates, remove own eaten pieces."""
@@ -191,7 +194,7 @@ def removeEatenPieces(state, eatWhite):
         toEatPieces = state.blackPieces
         eatingPieces = state.whitePieces
 
-    toRemove = canEat(state, eatingPieces, toEatPieces)
+    toRemove = getEaten(state, eatingPieces, toEatPieces)
     for pieceToRemove in toRemove:
         toEatPieces.remove(pieceToRemove)
     return toEatPieces

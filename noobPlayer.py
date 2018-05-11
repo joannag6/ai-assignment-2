@@ -13,6 +13,25 @@ QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),
 QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
 CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 
+def noobPlacement(state):
+    choices = []
+    x = getPlaces(state)
+    return random.choice(x)
+
+def noobMovement(state, turnsLeft, turns):
+    choices = []
+    if turns == MOVEMENT_ONE - 1: # end of first moving stage (going to 6x6)
+        state.shrink(1)
+    if turns == MOVEMENT_TWO - 1: # end of second moving stage (going to 4x4)
+        state.shrink(2)
+
+    for move in getMoves(state):
+        choices.append(move)
+
+    if choices == []:
+        return None
+    return random.choice(choices)
+
 class Player:
     def __init__(self, colour):
         self.colour = colour

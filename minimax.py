@@ -132,26 +132,22 @@ class Player:
             self.placingPhase = False
 
 def getMoves(state):
-    moveList = []
+    moveList = set()
     if state.isWhiteTurn:
         for piece in state.whitePieces:
-            moveList += state.calcMovesForCoord(piece, state.blackPieces)
+            moveList |= state.calcMovesForCoord(piece, state.blackPieces)
     else:
         for piece in state.blackPieces:
-
-            moveList += state.calcMovesForCoord(piece, state.whitePieces)
-    # print(moveList)
-    # print("*")
-
-    return moveList # list of possible moves for that player
+            moveList |= state.calcMovesForCoord(piece, state.whitePieces)
+    return moveList # set of possible moves for that player
 
 
 # dummy utility function for terminal states
 # for now = ownPieces - oppPieces
 def getEvaluationValue(state):
     if state.isWhitePlayer:
-        return 2*len(state.whitePieces) - len(state.blackPieces)
-    return 2*len(state.blackPieces) - len(state.whitePieces)
+        return len(state.whitePieces) - len(state.blackPieces)
+    return len(state.blackPieces) - len(state.whitePieces)
 
 
 # different for placing and moving stage??
@@ -225,7 +221,6 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
                 # choices.append(nextVal)
 
     if not possibleMoves:
-
         return getEvaluationValue(newState) # TODO or None?
 
 
@@ -247,22 +242,6 @@ def minimaxMovement(state, turnsLeft, turns):
     if choices == []:
         return None
     return getRandMax(choices)[1]
-
-
-def noobMovement(state, turnsLeft, turns):
-    choices = []
-    if turns == MOVEMENT_ONE - 1: # end of first moving stage (going to 6x6)
-        state.shrink(1)
-    if turns == MOVEMENT_TWO - 1: # end of second moving stage (going to 4x4)
-        state.shrink(2)
-
-    for move in getMoves(state):
-        choices.append(move)
-
-    if choices == []:
-        return None
-    # return random.choice(choices)
-    return random.choice(choices)
 
 
 def getRandMin(tupList):

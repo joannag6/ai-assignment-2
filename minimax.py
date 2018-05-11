@@ -3,13 +3,17 @@ from moves import *
 
 PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD_MOVE = 4
+LOOKAHEAD_MOVE = 3
 MOVEMENT_ONE = 128
 MOVEMENT_TWO = 192
-QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)]
-QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
-QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
-QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
+QUAD_ONE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
+                   for y in range(INITIAL_BOARD_SIZE//2)]
+QUAD_TWO = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
+                   for y in range(INITIAL_BOARD_SIZE//2)]
+QUAD_THREE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
+                     for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
+QUAD_FOUR = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
+                    for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
 CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 
 class Player:
@@ -271,35 +275,22 @@ def getRandMax(tupList):
 
 # only used in placing phase.
 def getPlaces(state):
-    placeList = []
     # If it is white's turn, it means we can only put in white's starting zone.
     # Create a set of all the coordinates minus the bottom two rows, then exclude
     # the ones already with pieces and corners.
-    placeList = []
     if state.isWhiteTurn:
-        for x in range(8):
-            for y in range(6):
-                coord = (x,y)
-                if (coord not in state.whitePieces and coord not in state.blackPieces
-                        and coord not in CORNERS):
-                    placeList.append(coord)
-
+        yRange = range(INITIAL_BOARD_SIZE-STARTING_LINE)
     else:
-        for x in range(8):
-            for y in range(2,8):
-                coord = (x,y)
-                if (coord not in state.whitePieces and coord not in state.blackPieces
-                        and coord not in CORNERS):
-                    placeList.append(coord)
-    return placeList
+        yRange = range(STARTING_LINE,INITIAL_BOARD_SIZE)
 
-# Function that just makes valid placements.
-def noobPlacement(state):
-    choices = []
-    #for place in getPlaces(state):
-    #    choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
-    x = getPlaces(state)
-    return random.choice(x) #max(choices)[1]
+    placeList = []
+    for x in range(INITIAL_BOARD_SIZE):
+        for y in yRange:
+            coord = (x,y)
+            if (coord not in state.whitePieces and coord not in state.blackPieces
+                    and not state.isCorner(coord[0], coord[1])):
+                placeList.append(coord)
+    return placeList
 
 def weakestQuadrant(state):
     quadOneCount = 0
@@ -423,10 +414,14 @@ def instantDeathPlacement(state, placeList):
                 toRemove.add(cell)
     return toRemove
 
-# We control an adjacent cell if the next one in that direction is not enemy cell, or not out of bounds
-# That first adjacent cell has to be empty.
-# This function calculates the number of cell that we can GAIN in control if we place a piece there.
+
 def controlValue(state, coord):
+    """
+    We control an adjacent cell if the next one in that direction is not enemy
+    cell, or not out of bounds. That first adjacent cell has to be empty.
+    This function calculates the number of cells that we can GAIN in control if
+    we place a piece there.
+    """
     enemyPieces = state.enemyPieces()
     allyPieces = state.allyPieces()
     controlScore = 0
@@ -436,8 +431,9 @@ def controlValue(state, coord):
             controlScore += 1
     return controlScore
 
-# Number of kills that can result from placing a piece on a particular cell.
+
 def killValue(state, coord):
+    """Returns number of kills that can result from placing a piece on a particular cell."""
     enemyPieces = state.enemyPieces()
     allyPieces = state.allyPieces()
     killValue = 0
@@ -448,56 +444,3 @@ def killValue(state, coord):
         if inBoardRange(coord1) and inBoardRange(coord2) and state.isEnemy(enemyPieces, coord1) and state.isAlly(allyPieces, coord2):
             killValue+=1
     return killValue
-
-
-def main():
-    #movementService = Movement(GameState(INITIAL_BOARD_SIZE, set(), set(), True, True))
-    whitePlayer = Player("white")
-    blackPlayer = Player("black")
-
-    for i in range(0,24):
-        nextMove = whitePlayer.action(i)
-        print("white: " + str(nextMove))
-        blackPlayer.update(nextMove)
-
-        nextMove = blackPlayer.action(i+1)
-        print("black: " + str(nextMove))
-        whitePlayer.update(nextMove)
-
-    for turns in range(0, MOVEMENT_TWO+2, 2):
-        nextMove = whitePlayer.action(turns)
-        print("white: " + str(nextMove))
-        blackPlayer.update(nextMove)
-        print("####################################################################")
-
-
-        if turns > STARTING_PIECES * 2 and whitePlayer.state.isEndState():
-            if len(whitePlayer.state.whitePieces) > len(whitePlayer.state.blackPieces):
-                print("White player wins!")
-                break
-            if len(whitePlayer.state.whitePieces) < len(whitePlayer.state.blackPieces):
-                print("Black player wins!")
-                break
-            else:
-                print("It's a draw!!")
-                break
-
-        nextMove = blackPlayer.action(turns+1)
-        print("black: " + str(nextMove))
-        whitePlayer.update(nextMove)
-        print("####################################################################")
-
-        if turns > STARTING_PIECES * 2 and blackPlayer.state.isEndState():
-            if len(whitePlayer.state.whitePieces) > len(whitePlayer.state.blackPieces):
-                print("White player wins!")
-                break
-            if len(whitePlayer.state.whitePieces) < len(whitePlayer.state.blackPieces):
-                print("Black player wins!")
-                break
-            else:
-                print("It's a draw!!")
-                break
-
-
-if __name__ == "__main__":
-    main()

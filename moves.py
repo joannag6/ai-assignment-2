@@ -2,6 +2,7 @@
 # Also contains newly written helper functions, related to cell operations and movement.
 START_PHASE = 0
 INITIAL_BOARD_SIZE = 8
+STARTING_LINE = 2
 
 
 class GameState:
@@ -23,7 +24,7 @@ class GameState:
     def removeOutOfBounds(self, pieces):
         newPieces = set()
         for i, j in pieces:
-            if self.withinBounds(i, j) and not self.corner(i, j):
+            if self.withinBounds(i, j) and not self.isCorner(i, j):
                 newPieces.add((i, j))
         return newPieces
 
@@ -81,7 +82,7 @@ class GameState:
 
         return ((i, j) not in self.blackPieces
                 and (i, j) not in self.whitePieces
-                and not self.corner(i, j))
+                and not self.isCorner(i, j))
 
     def canJumpRight_(self, i, j):
         """Checks if piece can jump right"""
@@ -128,28 +129,26 @@ class GameState:
         return self.canJumpDown_(i, j)
 
 
-    def corner(self, i, j):
+    def isCorner(self, i, j):
         """Checks if coordinates given is a corner of the board."""
         return i in self.corners and j in self.corners
 
 
     def withinBounds(self, i, j):
         """Checks if coordinates given is on the board."""
-        # TODO: find a better way to do this.
-        corners = self.corners
-        return (min(corners) <= i <= max(corners) and
-                (min(corners) <= j <= max(corners)) and
-                not self.corner(i, j))
+        return (min(self.corners) <= i <= max(self.corners) and
+                (min(self.corners) <= j <= max(self.corners)) and
+                not self.isCorner(i, j))
 
     def isEnemy(self, enemyPieces, coordinate):
         """Checks if coordinates belong to the enemy (or is a corner)."""
         i, j = coordinate
-        return (self.withinBounds(i, j) and coordinate in enemyPieces) or self.corner(i, j)
+        return (self.withinBounds(i, j) and coordinate in enemyPieces) or self.isCorner(i, j)
 
     def isAlly(self, allyPieces, coordinate):
         """Checks if coordinates belong to ally"""
         i, j = coordinate
-        return self.withinBounds(i, j) and (coordinate in allyPieces or self.corner(i, j))
+        return self.withinBounds(i, j) and (coordinate in allyPieces or self.isCorner(i, j))
 
 
     def canEatSide(self, enemyPieces, side1, side2):

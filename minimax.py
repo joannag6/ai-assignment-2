@@ -3,13 +3,17 @@ from moves import *
 
 PLACEMENT_LINE = 2
 STARTING_PIECES = 12
-LOOKAHEAD_MOVE = 5
+LOOKAHEAD_MOVE = 3
 MOVEMENT_ONE = 128
 MOVEMENT_TWO = 192
-QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)]
-QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
-QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
-QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
+QUAD_ONE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
+                   for y in range(INITIAL_BOARD_SIZE//2)]
+QUAD_TWO = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
+                   for y in range(INITIAL_BOARD_SIZE//2)]
+QUAD_THREE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
+                     for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
+QUAD_FOUR = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
+                    for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
 CORNERS = [(0,0),(7,0),(0,7),(7,7)]
 CENTRE = [(3,4),(4,4),(4,3),(3,3)]
 
@@ -22,6 +26,11 @@ class Player:
         self.turns = 0
 
     def action(self, turns):
+        print("black pieces")
+        print(self.state.blackPieces)
+        print("white pieces")
+        print(self.state.whitePieces)
+
         """turns: int, total turns for that phase"""
 
         # Referee will pass the number of turns that have happened.
@@ -43,9 +52,6 @@ class Player:
         self.turns += 1
 
         self.selfUpdate(nextMove)
-
-        # return (x, y) for placing piece
-        # return ((oldx, oldy), (newx, newy)) for moving piece
 
         return nextMove
 
@@ -129,18 +135,14 @@ class Player:
             self.placingPhase = False
 
 def getMoves(state):
-    moveList = []
+    moveList = set()
     if state.isWhiteTurn:
         for piece in state.whitePieces:
-            moveList += state.calcMovesForCoord(piece, state.blackPieces)
+            moveList |= state.calcMovesForCoord(piece, state.blackPieces)
     else:
         for piece in state.blackPieces:
-
-            moveList += state.calcMovesForCoord(piece, state.whitePieces)
-    # print(moveList)
-    # print("*")
-
-    return moveList # list of possible moves for that player
+            moveList |= state.calcMovesForCoord(piece, state.whitePieces)
+    return moveList # set of possible moves for that player
 
 
 # dummy utility function for terminal states
@@ -184,34 +186,50 @@ def getMoveValue(move, ownTurn, state, turnsLeft, turns, alpha, beta):
     if turnsLeft == 0 or newState.isEndState():
         return getEvaluationValue(newState)
 
-    choices = []
-    for nextMove in getMoves(newState):
+
+    # choices = []
+    possibleMoves = getMoves(newState)
+    for nextMove in possibleMoves:
+        # if ownTurn: alpha = None
+        # else: beta = None
+
         nextVal = getMoveValue(nextMove, not ownTurn, newState, turnsLeft-1, turns+1, alpha, beta)
+
+        # newState.printBoard()
+        # print(nextMove)
+        # print("alpha: " + str(alpha))
+        # print("beta: " + str(beta))
+        # print("this val: " + str(nextVal))
+
+        if alpha != None and beta != None and beta <= alpha:
+           return nextVal
+
         if ownTurn:
-            if beta == None:
-                beta = nextVal
-                choices.append(nextVal)
-            elif nextVal >= beta:
-                return nextVal
-            else:
-                choices.append(nextVal)
-        if not ownTurn:
-            if alpha == None:
+            if alpha == None or nextVal >= alpha:
                 alpha = nextVal
-                choices.append(nextVal)
-            elif nextVal <= alpha:
-                return nextVal
-            else:
-                choices.append(nextVal)
+                # choices.append(nextVal)
+                # elif nextVal >= alpha:
+                # print("CUT")
+                # return nextVal
+                # else:
+                # choices.append(nextVal)
+        if not ownTurn:
+            if beta == None or nextVal <= beta:
+                beta = nextVal
+                # choices.append(nextVal)
+                # elif nextVal <= beta:
+                # print("CUT")
+                # return nextVal
+                # else:
+                # choices.append(nextVal)
 
-    if choices == []:
-
+    if not possibleMoves:
         return getEvaluationValue(newState) # TODO or None?
 
 
     if ownTurn:
-        return max(choices)
-    return min(choices)
+        return alpha#max(choices)
+    return beta#min(choices)
 
 
 def minimaxMovement(state, turnsLeft, turns):
@@ -222,27 +240,11 @@ def minimaxMovement(state, turnsLeft, turns):
         state.shrink(2)
 
     for move in getMoves(state):
-        choices.append((getMoveValue(move, True, state, turnsLeft-1, turns+1, None, None), move))
+        choices.append((getMoveValue(move, False, state, turnsLeft-1, turns+1, None, None), move))
 
     if choices == []:
         return None
     return getRandMax(choices)[1]
-
-
-def noobMovement(state, turnsLeft, turns):
-    choices = []
-    if turns == MOVEMENT_ONE - 1: # end of first moving stage (going to 6x6)
-        state.shrink(1)
-    if turns == MOVEMENT_TWO - 1: # end of second moving stage (going to 4x4)
-        state.shrink(2)
-
-    for move in getMoves(state):
-        choices.append(move)
-
-    if choices == []:
-        return None
-    # return random.choice(choices)
-    return random.choice(choices)
 
 
 def getRandMin(tupList):
@@ -255,35 +257,25 @@ def getRandMax(tupList):
 
 # only used in placing phase.
 def getPlaces(state):
-    placeList = []
     # If it is white's turn, it means we can only put in white's starting zone.
     # Create a set of all the coordinates minus the bottom two rows, then exclude
     # the ones already with pieces and corners.
-    placeList = []
     if state.isWhiteTurn:
-        for x in range(8):
-            for y in range(6):
-                coord = (x,y)
-                if (coord not in state.whitePieces and coord not in state.blackPieces
-                        and coord not in CORNERS):
-                    placeList.append(coord)
-
+        yRange = range(INITIAL_BOARD_SIZE-STARTING_LINE)
+        print("white player")
     else:
-        for x in range(8):
-            for y in range(2,8):
-                coord = (x,y)
-                if (coord not in state.whitePieces and coord not in state.blackPieces
-                        and coord not in CORNERS):
-                    placeList.append(coord)
+        yRange = range(STARTING_LINE,INITIAL_BOARD_SIZE)
+        print("black player")
+    placeList = []
+    for x in range(INITIAL_BOARD_SIZE):
+        for y in yRange:
+            coord = (x,y)
+            if (coord not in state.whitePieces and coord not in state.blackPieces
+                    and not state.isCorner(x, y)):
+                placeList.append(coord)
+    print(placeList)
+    #print(placeList)
     return placeList
-
-# Function that just makes valid placements.
-def noobPlacement(state):
-    choices = []
-    #for place in getPlaces(state):
-    #    choices.append((getPlaceValue(place, False, state, turnsLeft-1), place))
-    x = getPlaces(state)
-    return random.choice(x) #max(choices)[1]
 
 def weakestQuadrant(state):
     quadOneCount = 0
@@ -323,12 +315,17 @@ def heurPlacement(player):
 
     # First, we prioritize kills.
     killList = []
+    controlList = []
+
     # Construct a list of cells that can result in kills.
     for cell in availableCells:
-        if killValue(state,cell)>0:
+        killValue, controlValue = getKillControlValue(state, cell)
+        if killValue > 0:
             killList.append((killValue,cell))
+        controlList.append((controlValue, cell)) # Construct a list for control evaluation.
+
     # From cells that result in kills, we choose a random cell with max kills.
-    if len(killList)>0:
+    if len(killList) > 0:
         # Prune the current killList so it only contains entries with max killValue.
         killList2 = []
         maxKillValue, cell = max(killList)
@@ -350,19 +347,16 @@ def heurPlacement(player):
 
     # if we reach here, no kills possible.
     # If we can't kill, we just play for control.
-    controlList = []
     nonAllowedList = enemyControlledCells(player.state)
-    
-    # Set of coords we can place pieces that will result in them instantly dying. 
-    instantDeathCoords = instantDeathPlacement(state, availableCells)
+
+    # Set of coords we can place pieces that will result in them instantly dying.
+    instantDeathCoords = getEaten(state, state.enemyPieces(), availableCells)#instantDeathPlacement(state, availableCells)
+
     for cell in instantDeathCoords:
         if cell not in nonAllowedList:
             nonAllowedList.append(cell)
 
-    # Construct a list for control evaluation.
-    for cell in availableCells:
-        controlList.append((controlValue(state,cell), cell))
-    maxControlScore,maxControlCoord = max(controlList)
+    maxControlScore, maxControlCoord = max(controlList)
 
     # Construct a list that only holds coords with best control score at this point.
     controlList2 = []
@@ -383,105 +377,37 @@ def heurPlacement(player):
     else:
         return random.choice(controlList3)
 
-# Function that takes a state and returns list of cells that, if we place a piece, allows opponent to instantly kill that piece. 
+# Function that takes a state and returns list of cells that, if we place a piece, allows opponent to instantly kill that piece.
 def enemyControlledCells(state):
     enemyPieces = state.enemyPieces()
-    allyPieces = state.allyPieces()
     nonAllowedList = []
     for coord in enemyPieces:
         coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
         for coord1,coord2 in coordPairsToCheck:
-            if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty_(coord1[0], coord1[1]) and state.isEmpty_(coord2[0], coord2[0]):
+            x1, y1 = coord1
+            x2, y2 = coord2
+            if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEmpty_(x1, y1) and state.isEmpty_(x2, y2):
                 nonAllowedList.append(coord1)
     return nonAllowedList
 
-# Function that takes a state and list of already non allowed cells, and returns cells that will instantly get us killed, without opponent doing anything
-# if we place a piece there. 
-def instantDeathPlacement(state, placeList):
-    enemyPieces = state.enemyPieces()
-    toRemove = set()
-    for cell in placeList:
-        coordPairsToCheck = ((up(cell), down(cell)), (left(cell), right(cell)))
-        for coord1, coord2 in coordPairsToCheck:
-            if inBoardRange(coord1) and inBoardRange(coord2) and (coord1 in enemyPieces) and (coord2 in enemyPieces):
-                toRemove.add(cell)
-    return toRemove
 
-# We control an adjacent cell if the next one in that direction is not enemy cell, or not out of bounds
-# That first adjacent cell has to be empty.
-# This function calculates the number of cell that we can GAIN in control if we place a piece there.
-def controlValue(state, coord):
-    enemyPieces = state.enemyPieces()
-    allyPieces = state.allyPieces()
-    controlScore = 0
-    coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
-    for coord1,coord2 in coordPairsToCheck:
-        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEmpty_(coord1[0], coord1[1]) and not state.isEnemy(enemyPieces,coord2):
-            controlScore += 1
-    return controlScore
-
-# Number of kills that can result from placing a piece on a particular cell.
-def killValue(state, coord):
+def getKillControlValue(state, coord):
+    """
+    We control an adjacent cell if the next one in that direction is not enemy
+    cell, or not out of bounds. That first adjacent cell has to be empty.
+    This function calculates the number of cells that we can GAIN in control if
+    we place a piece there.
+    """
     enemyPieces = state.enemyPieces()
     allyPieces = state.allyPieces()
     killValue = 0
-    # if adjacent coords contain enemy and one more cell in that
-    # direction contains ally piece, we can eliminate that enemy.
+    controlScore = 0
     coordPairsToCheck = ((up(coord), twoUp(coord)),(down(coord), twoDown(coord)),(left(coord),twoLeft(coord)),(right(coord), twoRight(coord)))
     for coord1,coord2 in coordPairsToCheck:
-        if inBoardRange(coord1) and inBoardRange(coord2) and state.isEnemy(enemyPieces, coord1) and state.isAlly(allyPieces, coord2):
+        x1, y1 = coord1
+        x2, y2 = coord2
+        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEmpty_(x1, y1) and not state.isEnemy(coord2):
+            controlScore += 1
+        if state.withinBounds(x1, y1) and state.withinBounds(x2, y2) and state.isEnemy(coord1) and state.isAlly(coord2):
             killValue+=1
-    return killValue
-
-
-def main():
-    #movementService = Movement(GameState(INITIAL_BOARD_SIZE, set(), set(), True, True))
-    whitePlayer = Player("white")
-    blackPlayer = Player("black")
-
-    for i in range(0,24):
-        nextMove = whitePlayer.action(i)
-        print("white: " + str(nextMove))
-        blackPlayer.update(nextMove)
-
-        nextMove = blackPlayer.action(i+1)
-        print("black: " + str(nextMove))
-        whitePlayer.update(nextMove)
-
-    for turns in range(0, MOVEMENT_TWO+2, 2):
-        nextMove = whitePlayer.action(turns)
-        print("white: " + str(nextMove))
-        blackPlayer.update(nextMove)
-        print("####################################################################")
-
-
-        if turns > STARTING_PIECES * 2 and whitePlayer.state.isEndState():
-            if len(whitePlayer.state.whitePieces) > len(whitePlayer.state.blackPieces):
-                print("White player wins!")
-                break
-            if len(whitePlayer.state.whitePieces) < len(whitePlayer.state.blackPieces):
-                print("Black player wins!")
-                break
-            else:
-                print("It's a draw!!")
-                break
-
-        nextMove = blackPlayer.action(turns+1)
-        print("black: " + str(nextMove))
-        whitePlayer.update(nextMove)
-        print("####################################################################")
-
-        if turns > STARTING_PIECES * 2 and blackPlayer.state.isEndState():
-            if len(whitePlayer.state.whitePieces) > len(whitePlayer.state.blackPieces):
-                print("White player wins!")
-                break
-            if len(whitePlayer.state.whitePieces) < len(whitePlayer.state.blackPieces):
-                print("Black player wins!")
-                break
-            else:
-                print("It's a draw!!")
-                break
-
-
-if __name__ == "__main__":
-    main()
+    return killValue, controlScore

@@ -2,6 +2,37 @@ import random
 from moves import *
 from minimax import *
 
+
+PLACEMENT_LINE = 2
+STARTING_PIECES = 12
+LOOKAHEAD_MOVE = 5
+MOVEMENT_ONE = 128
+MOVEMENT_TWO = 192
+QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)]
+QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
+QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
+QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
+CORNERS = [(0,0),(7,0),(0,7),(7,7)]
+
+def noobPlacement(state):
+    choices = []
+    x = getPlaces(state)
+    return random.choice(x) #max(choices)[1]
+
+def noobMovement(state, turnsLeft, turns):
+    choices = []
+    if turns == MOVEMENT_ONE - 1: # end of first moving stage (going to 6x6)
+        state.shrink(1)
+    if turns == MOVEMENT_TWO - 1: # end of second moving stage (going to 4x4)
+        state.shrink(2)
+
+    for move in getMoves(state):
+        choices.append(move)
+
+    if choices == []:
+        return None
+    return random.choice(choices)
+
 class Player:
     def __init__(self, colour):
         self.colour = colour

@@ -11,6 +11,7 @@ QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7
 QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
 QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
 CORNERS = [(0,0),(7,0),(0,7),(7,7)]
+CENTRE = [(3,4),(4,4),(4,3),(3,3)]
 
 class Player:
     def __init__(self, colour):
@@ -146,8 +147,8 @@ def getMoves(state):
 # for now = ownPieces - oppPieces
 def getEvaluationValue(state):
     if state.isWhitePlayer:
-        return 2*len(state.whitePieces) - len(state.blackPieces)
-    return 2*len(state.blackPieces) - len(state.whitePieces)
+        return len(state.whitePieces) - len(state.blackPieces)
+    return len(state.blackPieces) - len(state.whitePieces)
 
 
 # different for placing and moving stage??
@@ -312,6 +313,7 @@ def weakestQuadrant(state):
 
 # Function that is meant to make good placements.
 def heurPlacement(player):
+    # if centre is empty and 
     if player.isWhite and player.turns is 0:
         return (3,4)
     state = player.state
@@ -333,7 +335,6 @@ def heurPlacement(player):
         for entry in killList:
             if entry[0] == maxKillValue:
                 killList2.append(entry)
-        returnEntry = random.choice(killList2)
         # Prune the current killList so it only contains entries in weakest quadrant.
         killList3 = []
         for entry in killList2:

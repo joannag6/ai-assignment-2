@@ -2,17 +2,6 @@ import random
 from moves import *
 from minimax import *
 
-PLACEMENT_LINE = 2
-STARTING_PIECES = 12
-LOOKAHEAD_MOVE = 5
-MOVEMENT_ONE = 128
-MOVEMENT_TWO = 192
-QUAD_ONE = [(0,0), (1,0), (2,0), (3,0), (0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(0,3),(1,3),(2,3),(3,3)]
-QUAD_TWO = [(4,0),(5,0),(6,0),(7,0),(4,1),(5,1),(6,1),(7,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3)]
-QUAD_THREE = [(0,4),(1,4),(2,4),(3,4),(0,5),(1,5),(2,5),(3,5),(0,6),(1,6),(2,6),(3,6),(0,7),(1,7),(2,7),(3,7)]
-QUAD_FOUR = [(4,4),(5,4),(6,4),(7,4),(4,5),(5,5),(6,5),(7,5),(4,6),(5,6),(6,6),(7,6),(4,7),(5,7),(6,7),(7,7)]
-CORNERS = [(0,0),(7,0),(0,7),(7,7)]
-
 class Player:
     def __init__(self, colour):
         self.colour = colour
@@ -39,7 +28,6 @@ class Player:
             nextMove = noobPlacement(self.state)
         else:
             nextMove = noobMovement(self.state, LOOKAHEAD_MOVE, turns)
-
         # Increments the number of turns that have happened, since an action took place.
         self.turns += 1
 
@@ -80,7 +68,9 @@ class Player:
         if not self.placingPhase:
             # Code that implements shrinking.
             if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
+
                 self.state.shrink(1)
+
             if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
                 self.state.shrink(2)
 
@@ -93,7 +83,6 @@ class Player:
 
     def update(self, action):
         self.turns += 1
-
         """Update internal game state according to opponent's action"""
 
         if action == None:
@@ -115,9 +104,7 @@ class Player:
         if not self.placingPhase:
             # Code that implements shrinking.
             if self.turns == MOVEMENT_ONE: # end of first moving stage (going to 6x6)
-
                 self.state.shrink(1)
-
             if self.turns == MOVEMENT_TWO: # end of second moving stage (going to 4x4)
                 self.state.shrink(2)
 

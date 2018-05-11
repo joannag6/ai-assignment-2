@@ -13,21 +13,6 @@ to play the Watch Your Back game, utilising:
 import random
 from moves import *
 
-PLACEMENT_LINE = 2
-STARTING_PIECES = 12
-LOOKAHEAD_MOVE = 3
-MOVEMENT_ONE = 128
-MOVEMENT_TWO = 192
-BEST_STARTING_COORD = (3,4)
-QUAD_ONE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
-                   for y in range(INITIAL_BOARD_SIZE//2)]
-QUAD_TWO = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
-                   for y in range(INITIAL_BOARD_SIZE//2)]
-QUAD_THREE = [(x, y) for x in range(INITIAL_BOARD_SIZE//2)
-                     for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
-QUAD_FOUR = [(x, y) for x in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)
-                    for y in range(INITIAL_BOARD_SIZE//2, INITIAL_BOARD_SIZE)]
-
 
 class Player:
     def __init__(self, colour):

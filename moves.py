@@ -165,12 +165,14 @@ class GameState:
     def isEnemy(self, coordinate):
         """Checks if coordinates belong to the enemy (or is a corner)."""
         i, j = coordinate
-        return self.withinBounds(i, j) and coordinate in self.enemyPieces() or self.isCorner(i, j)
+        return self.withinBounds(i, j) and
+               (coordinate in self.enemyPieces() or self.isCorner(i, j))
 
     def isAlly(self, coordinate):
         """Checks if coordinates belong to ally"""
         i, j = coordinate
-        return self.withinBounds(i, j) and (coordinate in self.allyPieces() or self.isCorner(i, j))
+        return self.withinBounds(i, j) and
+               (coordinate in self.allyPieces() or self.isCorner(i, j))
 
     def canEatSide(self, enemyPieces, side1, side2):
         """Checks a piece between side1 and side2 will be eaten."""

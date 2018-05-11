@@ -31,6 +31,8 @@ class GameState:
 
     def shrink(self, newPhase):
         """Shrinks board to new size according to newPhase argument given"""
+        if self.size == INITIAL_BOARD_SIZE - 2*newPhase: return # already shrank
+
         self.corners = {newPhase,INITIAL_BOARD_SIZE-newPhase-1}
         self.size = INITIAL_BOARD_SIZE - 2*newPhase
         self.whitePieces = self.removeOutOfBounds(self.whitePieces)
